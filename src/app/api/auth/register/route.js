@@ -4,45 +4,69 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request) {
   try {
-    const { firstName, lastName, email, password, phone, taxId, role } = await request.json();
+    const body = await request.json();
+    const { firstName, lastName, email, password, phone, taxId, role } = body;
 
-    // 1. ตรวจสอบข้อมูลซ้ำใน PostgreSQL
+    // 1. ตรวจสอบข้อมูลบังคับ
+    if (!firstName || !lastName || !email || !password) {
+      return NextResponse.json(
+        { success: false, message: 'กรุณากรอกข้อมูลบังคับ (ชื่อ, นามสกุล, อีเมล, รหัสผ่าน) ให้ครบถ้วน' },
+        { status: 400 }
+      );
+    }
+
+    // 2. ตรวจสอบผู้ใช้งานซ้ำ
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [{ email }, { taxId }],
+        OR: [
+          { email: email.trim() },
+          ...(taxId ? [{ taxId: taxId.trim() }] : []),
+        ],
       },
     });
 
     if (existingUser) {
       return NextResponse.json(
-        { success: false, message: 'อีเมลหรือเลขประจำตัวผู้เสียภาษีนี้ถูกใช้งานแล้ว' },
+        { success: false, message: 'อีเมลหรือเลขผู้เสียภาษีนี้ถูกใช้งานในระบบแล้ว' },
         { status: 400 }
       );
     }
 
-    // 2. เข้ารหัสรหัสผ่าน
+    // 3. เข้ารหัสรหัสผ่าน
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. บันทึกผู้ใช้ใหม่ลงฐานข้อมูล
+    // 4. บันทึกข้อมูลลงใน PostgreSQL
     const newUser = await prisma.user.create({
       data: {
-        firstName,
-        lastName,
-        email,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
         password: hashedPassword,
-        phone,
-        taxId,
+        phone: phone ? phone.trim() : null,
+        taxId: taxId ? taxId.trim() : null,
         role: role || 'EXPORTER',
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'ลงทะเบียนสำเร็จ',
-      user: { id: newUser.id, email: newUser.email, firstName: newUser.firstName },
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'ลงทะเบียนสำเร็จ',
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          role: newUser.role,
+        },
+      },
+      { status: 201 }
+    );
   } catch (error) {
-    console.error('Register API Error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Registration API Error:', error);
+    return NextResponse.json(
+      { success: false, error: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์: ' + error.message },
+      { status: 500 }
+    );
   }
 }

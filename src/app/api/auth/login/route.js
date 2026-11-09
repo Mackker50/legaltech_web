@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
+// Named Export สำหรับรองรับคำขอประเภท POST
 export async function POST(request) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
+    const { email, password } = body;
 
+    // 1. ตรวจสอบข้อมูลที่ส่งเข้ามา
     if (!email || !password) {
       return NextResponse.json(
         { success: false, message: 'กรุณากรอกอีเมลและรหัสผ่าน' },
@@ -13,47 +16,49 @@ export async function POST(request) {
       );
     }
 
-    // 1. ค้นหาผู้ใช้งานจากอีเมลใน PostgreSQL
+    // 2. ค้นหาผู้ใช้งานในฐานข้อมูล PostgreSQL ผ่าน Prisma
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email },
     });
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: 'ไม่พบบัญชีผู้ใช้งานในระบบ' },
-        { status: 404 }
-      );
-    }
-
-    // 2. ตรวจสอบรหัสผ่านที่ส่งมาเทียบกับแฮชใน Database
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { success: false, message: 'รหัสผ่านไม่ถูกต้อง' },
+        { success: false, message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' },
         { status: 401 }
       );
     }
 
-    // 3. คืนค่าข้อมูลโปรไฟล์ผู้ใช้เมื่อล็อกอินสำเร็จ
-    return NextResponse.json({
-      success: true,
-      message: 'เข้าสู่ระบบสำเร็จ',
-      user: {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        fullName: `${user.firstName} ${user.lastName}`,
-        email: user.email,
-        phone: user.phone,
-        taxId: user.taxId,
-        role: user.role,
+    // 3. เปรียบเทียบ Hash รหัสผ่านด้วย bcryptjs
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { success: false, message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' },
+        { status: 401 }
+      );
+    }
+
+    // 4. ส่งผลลัพธ์ข้อมูลผู้ใช้งานกลับไป (ยกเว้นรหัสผ่าน)
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'เข้าสู่ระบบสำเร็จ',
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          fullName: `${user.firstName} ${user.lastName}`,
+          role: user.role,
+          taxId: user.taxId,
+        },
       },
-    });
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Login API Error:', error);
     return NextResponse.json(
-      { success: false, message: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' },
+      { success: false, error: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ' + error.message },
       { status: 500 }
     );
   }

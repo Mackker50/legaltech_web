@@ -1,22 +1,24 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
-// ------------------------------------------------------
-// Enums Definitions
-// ------------------------------------------------------
+datasource db {
+  provider = "postgresql"
+}
 
+// 1. Enums ตัวเลือกบทบาทและสถานะ
 enum Role {
-  EXPORTER      // ผู้ส่งออกสินค้าเกษตร
-  FARMER        // เกษตรกร / สหกรณ์การเกษตร
-  BUYER         // ผู้ซื้อต่างประเทศ
-  TRANSPORTER   // ผู้ให้บริการขนส่ง / Forwarder
-  ADMIN         // ผู้ดูแลระบบ
+  EXPORTER
+  FARMER
+  BUYER
+  TRANSPORTER
+  ADMIN
 }
 
 enum Incoterm {
@@ -28,49 +30,44 @@ enum Incoterm {
 }
 
 enum DealStatus {
-  DRAFT         // ร่างสัญญา
-  PENDING       // รอการยืนยันข้อตกลง
-  ACTIVE        // สัญญามีผลบังคับใช้
-  COMPLETED     // ส่งออกเสร็จสิ้น
-  CANCELLED     // ยกเลิกสัญญา
+  DRAFT
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
 }
 
 enum DocStatus {
-  PENDING       // รอการอัปโหลด
-  UPLOADED      // อัปโหลดแล้ว รอตรวจสอบ
-  VERIFIED      // ตรวจสอบผ่านถูกต้อง
-  REJECTED      // เอกสารไม่ถูกต้อง/ถูกปฏิเสธ
+  PENDING
+  UPLOADED
+  VERIFIED
+  REJECTED
 }
 
-// ------------------------------------------------------
-// Models Definitions
-// ------------------------------------------------------
-
-// 1. โมเดลผู้ใช้งาน (User & Authentication)
+// 2. ตารางผู้ใช้งาน
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String
   firstName String
   lastName  String
-  phone     String?
-  taxId     String?  @unique
+  phone     String
+  taxId     String  @unique
   role      Role     @default(EXPORTER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relationship
-  createdDeals Deal[]  @relation("DealCreator")
+  createdDeals Deal[] @relation("DealCreator")
 }
 
-// 2. โมเดลดีลสัญญาส่งออก (Export Deal / Contract)
+// 3. ตารางดีลสัญญาส่งออก
 model Deal {
   id                 String     @id @default(uuid())
-  title              String     // เช่น สัญญาส่งออกทุเรียนหมอนทอง ชิปเมนต์ Q4
-  productCategory    String     // เช่น ทุเรียนสด, มะพร้าวน้ำหอม, ข้าวหอมมารี
-  quantityKg         Float      // ปริมาณสินค้า (กิโลกรัม)
-  totalValueUSD      Float      // มูลค่ารวม (USD)
-  destinationCountry String     // ประเทศปลายทาง
+  title              String
+  productCategory    String
+  quantityKg         Float
+  totalValueUSD      Float
+  destinationCountry String
   incoterm           Incoterm   @default(FOB)
   status             DealStatus @default(DRAFT)
   
@@ -82,14 +79,14 @@ model Deal {
   updatedAt          DateTime   @updatedAt
 }
 
-// 3. โมเดลเอกสารประกอบการส่งออก (Export Documents & AI Checklist)
+// 4. ตารางเอกสารส่งออก
 model Document {
   id               String    @id @default(uuid())
-  docName          String    // เช่น Phytosanitary Certificate, Bill of Lading
-  responsibleParty String    // เช่น Exporter, Forwarder
+  docName          String
+  responsibleParty String
   isMandatory      Boolean   @default(true)
   status           DocStatus @default(PENDING)
-  fileUrl          String?   // Link ไฟล์ใน Storage/S3
+  fileUrl          String?
   description      String?
 
   dealId           String
