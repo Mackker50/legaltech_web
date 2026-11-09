@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 export default function RootLayout({ children }) {
-  // 1. State สถานะการล็อกอินและโปรไฟล์
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  // 1. กำหนดค่าเริ่มต้นเป็น false เพื่อไม่ให้ค้างสถานะล็อกอินไว้เมื่อเข้าเว็บ
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const [userProfile] = useState({
+  // 2. ข้อมูลโปรไฟล์ผู้ใช้งานเมื่อล็อกอินสำเร็จ
+  const [userProfile, setUserProfile] = useState({
     name: 'ฐิติพงศ์ ลีลาจิรวัฒน์',
     role: 'ผู้ส่งออก (Exporter)',
     email: 'thitipong@agrilegal.co.th',
@@ -25,12 +26,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="th">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
         <style>{`
-          /* Global CSS Reset & Responsive Rules */
           * { box-sizing: border-box; }
+          body { overflow-x: hidden; margin: 0; padding: 0; }
           
-          /* Desktop Navigation Links */
           .nav-desktop-links {
             display: flex;
             gap: 28px;
@@ -46,30 +46,34 @@ export default function RootLayout({ children }) {
             display: none;
           }
 
-          /* Tablet & Mobile Screens (ความกว้างน้อยกว่า 768px) */
+          @media (max-width: 900px) {
+            div[style*="gridTemplateColumns"],
+            section[style*="gridTemplateColumns"] {
+              grid-template-columns: 1fr !important;
+            }
+
+            div[style*="justifyContent: 'space-between'"],
+            div[style*="justify-content: space-between"] {
+              flex-direction: column !important;
+              align-items: flex-start !important;
+              gap: 16px !important;
+            }
+
+            h1 { font-size: 28px !important; line-height: 1.25 !important; }
+            h2 { font-size: 20px !important; }
+          }
+
           @media (max-width: 768px) {
-            .nav-desktop-links {
-              display: none; /* ซ่อนเมนูกลางบนมือถือ */
-            }
+            .nav-desktop-links { display: none; }
+            .nav-mobile-toggle { display: block; }
+            .nav-container { padding: 0 20px !important; }
+            .main-container { padding: 20px 16px 60px !important; }
 
-            .nav-mobile-toggle {
-              display: block; /* แสดงปุ่ม Hamburger */
-            }
-
-            .nav-container {
-              padding: 0 16px !important;
-            }
-
-            .main-container {
-              padding: 20px 16px 60px !important;
-            }
-
-            /* แสดงเมนูมือถือแบบพับเก็บ */
             .nav-mobile-menu {
               display: flex;
               flex-direction: column;
               gap: 16px;
-              background-color: rgba(255, 255, 255, 0.95);
+              background-color: rgba(255, 255, 255, 0.98);
               backdrop-filter: blur(20px);
               -webkit-backdrop-filter: blur(20px);
               position: absolute;
@@ -78,7 +82,7 @@ export default function RootLayout({ children }) {
               width: 100%;
               padding: 20px 24px;
               border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-              box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+              box-shadow: 0 10px 25px rgba(0,0,0,0.08);
             }
           }
         `}</style>
@@ -86,15 +90,13 @@ export default function RootLayout({ children }) {
 
       <body
         style={{
-          margin: 0,
-          padding: 0,
           backgroundColor: '#f5f5f7',
           color: '#1d1d1f',
           fontFamily:
             '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif',
         }}
       >
-        {/* Apple Glassmorphism Responsive Navbar */}
+        {/* Full-width Apple Glassmorphism Navbar */}
         <nav
           className="nav-container"
           style={{
@@ -107,13 +109,13 @@ export default function RootLayout({ children }) {
             borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
             padding: '0 32px',
             height: '54px',
+            width: '100%',
             display: 'flex',
-            justify: 'space-between',
             alignItems: 'center',
           }}
         >
           {/* 1. Left: Brand Logo */}
-          <div style={{ flex: '0 0 auto' }}>
+          <div style={{ flex: '0 0 auto', marginRight: '32px' }}>
             <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontSize: '18px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.02em' }}>
                 🌾 AgriLegal
@@ -124,8 +126,8 @@ export default function RootLayout({ children }) {
             </Link>
           </div>
 
-          {/* 2. Center: Desktop Menu Links */}
-          <div className="nav-desktop-links">
+          {/* 2. Center: Desktop Links */}
+          <div className="nav-desktop-links" style={{ flex: 1, justifyContent: 'flex-start' }}>
             <Link href="/" style={{ color: '#1d1d1f', textDecoration: 'none' }}>หน้าหลัก</Link>
             <Link href="/workspace" style={{ color: '#424245', textDecoration: 'none' }}>Workspace ดีล</Link>
             <Link href="/status" style={{ color: '#424245', textDecoration: 'none' }}>สถานะส่งออก</Link>
@@ -133,8 +135,8 @@ export default function RootLayout({ children }) {
             <Link href="/ai-legal" style={{ color: '#424245', textDecoration: 'none' }}>AI Legal Specialist</Link>
           </div>
 
-          {/* 3. Right: Profile Actions & Mobile Toggle */}
-          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' }}>
+          {/* 3. Right: Auth / Profile Actions (ขวาสุดของจอ) */}
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' }}>
             {isLoggedIn ? (
               <div>
                 <button
@@ -170,6 +172,7 @@ export default function RootLayout({ children }) {
                   <span style={{ fontSize: '13px', fontWeight: '500', color: '#1d1d1f' }}>
                     {userProfile.name.split(' ')[0]}
                   </span>
+                  <span style={{ fontSize: '10px', color: '#86868b' }}>▼</span>
                 </button>
 
                 {/* Profile Popover Menu */}
@@ -208,8 +211,11 @@ export default function RootLayout({ children }) {
               </div>
             ) : (
               <div style={{ display: 'flex', gap: '8px' }}>
-                <Link href="/login" style={{ backgroundColor: '#0071e3', color: '#fff', padding: '6px 14px', borderRadius: '980px', fontSize: '13px', textDecoration: 'none' }}>
+                <Link href="/login" style={{ backgroundColor: '#0071e3', color: '#fff', padding: '6px 16px', borderRadius: '980px', fontSize: '13px', textDecoration: 'none' }}>
                   เข้าสู่ระบบ
+                </Link>
+                <Link href="/register" style={{ backgroundColor: '#e8f2fc', color: '#0071e3', padding: '6px 16px', borderRadius: '980px', fontSize: '13px', textDecoration: 'none', fontWeight: '500' }}>
+                  ลงทะเบียน
                 </Link>
               </div>
             )}
@@ -231,7 +237,7 @@ export default function RootLayout({ children }) {
             </button>
           </div>
 
-          {/* Mobile Dropdown Drawer Menu */}
+          {/* Mobile Drawer Menu */}
           {isMobileMenuOpen && (
             <div className="nav-mobile-menu">
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#1d1d1f', textDecoration: 'none', fontSize: '15px', fontWeight: '500' }}>หน้าหลัก</Link>
@@ -243,7 +249,7 @@ export default function RootLayout({ children }) {
           )}
         </nav>
 
-        {/* Main Fluid Responsive Container */}
+        {/* Main Content Area */}
         <main className="main-container" style={{ maxWidth: '1040px', margin: '0 auto', padding: '32px 20px 80px' }}>
           {children}
         </main>

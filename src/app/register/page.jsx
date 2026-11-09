@@ -8,6 +8,7 @@ export default function RegisterPage() {
     firstName: '',
     lastName: '',
     taxId: '',
+    phone: '',
     email: '',
     password: '',
     role: 'EXPORTER',
@@ -38,32 +39,34 @@ export default function RegisterPage() {
         setMessage({ type: 'error', text: '❌ ' + data.message });
       }
     } catch (err) {
-      setMessage({ type: 'error', text: '❌ ไม่สามารถเชื่อมต่อระบบได้' });
+      setMessage({ type: 'error', text: '❌ ไม่สามารถเชื่อมต่อกับระบบได้' });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '480px', margin: '40px auto' }}>
-      <div style={{
-        backgroundColor: '#ffffff',
-        borderRadius: '20px',
-        padding: '40px',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-        border: '1px solid rgba(0,0,0,0.04)'
-      }}>
-        <h1 style={{ fontSize: '26px', fontWeight: '600', color: '#1d1d1f', textAlign: 'center', margin: '0 0 8px 0' }}>
+    <div style={{ maxWidth: '480px', margin: '20px auto' }}>
+      <div
+        style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '20px',
+          padding: '36px',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
+          border: '1px solid rgba(0,0,0,0.04)',
+        }}
+      >
+        <h1 style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', textAlign: 'center', margin: '0 0 6px 0' }}>
           สร้างบัญชีเข้าใช้งาน
         </h1>
-        <p style={{ fontSize: '14px', color: '#86868b', textAlign: 'center', margin: '0 0 28px 0' }}>
-          AgriLegal Workspace — ระบบธุรกรรมและสัญญาส่งออกสินค้าเกษตร
+        <p style={{ fontSize: '13px', color: '#86868b', textAlign: 'center', margin: '0 0 24px 0' }}>
+          AgriLegal Pro — ระบบสัญญาส่งออกและบริหารจัดการสิทธิ์
         </p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#86868b', marginBottom: '6px' }}>ชื่อ:</label>
+              <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>ชื่อ:</label>
               <input
                 type="text"
                 required
@@ -73,7 +76,7 @@ export default function RegisterPage() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#86868b', marginBottom: '6px' }}>นามสกุล:</label>
+              <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>นามสกุล:</label>
               <input
                 type="text"
                 required
@@ -85,7 +88,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '13px', color: '#86868b', marginBottom: '6px' }}>เลขประจำตัวผู้เสียภาษี (Tax ID):</label>
+            <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>เลขประจำตัวผู้เสียภาษี (Tax ID):</label>
             <input
               type="text"
               required
@@ -97,7 +100,19 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '13px', color: '#86868b', marginBottom: '6px' }}>เลือกบทบาทผู้ใช้งาน:</label>
+            <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>เบอร์โทรศัพท์:</label>
+            <input
+              type="tel"
+              required
+              placeholder="เช่น 0812345678"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d2d2d7', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>บทบาทการใช้งาน:</label>
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
@@ -105,13 +120,13 @@ export default function RegisterPage() {
             >
               <option value="EXPORTER">👨‍🌾 ผู้ส่งออก (Exporter)</option>
               <option value="MIDDLEMAN">🤝 พ่อค้าคนกลาง (Middleman)</option>
-              <option value="FARMER">🧑‍🌾 เกษตรกร / กลุ่มเกษตรกร (Farmer)</option>
-              <option value="FREIGHT_FORWARDER">🚢 บริษัทขนส่ง (Freight Forwarder)</option>
+              <option value="FARMER">🧑‍🌾 เกษตรกร (Farmer)</option>
+              <option value="FREIGHT_FORWARDER">🚢 บริษัทขนส่ง (Forwarder)</option>
             </select>
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '13px', color: '#86868b', marginBottom: '6px' }}>อีเมล:</label>
+            <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>อีเมล:</label>
             <input
               type="email"
               required
@@ -123,7 +138,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '13px', color: '#86868b', marginBottom: '6px' }}>รหัสผ่าน:</label>
+            <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>รหัสผ่าน:</label>
             <input
               type="password"
               required
@@ -142,25 +157,34 @@ export default function RegisterPage() {
               border: 'none',
               borderRadius: '980px',
               padding: '12px',
-              fontSize: '15px',
+              fontSize: '14px',
               fontWeight: '500',
-              cursor: 'pointer',
-              marginTop: '8px',
-              boxShadow: '0 4px 12px rgba(0,113,227,0.25)'
+              cursor: loading ? 'not-allowed' : 'pointer',
+              marginTop: '6px',
+              boxShadow: '0 4px 12px rgba(0,113,227,0.25)',
             }}
           >
-            {loading ? 'กำลังลงทะเบียน...' : 'ลงทะเบียนเข้าใช้งาน'}
+            {loading ? 'กำลังบันทึกข้อมูล...' : 'ลงทะเบียนเข้าใช้งาน'}
           </button>
         </form>
 
         {message && (
-          <div style={{ marginTop: '16px', padding: '12px', borderRadius: '8px', fontSize: '13px', backgroundColor: message.type === 'success' ? '#eefbdf' : '#ffebeb', color: message.type === 'success' ? '#297a00' : '#d70015' }}>
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '12px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              backgroundColor: message.type === 'success' ? '#eefbdf' : '#ffebeb',
+              color: message.type === 'success' ? '#297a00' : '#d70015',
+            }}
+          >
             {message.text}
           </div>
         )}
 
-        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: '#86868b' }}>
-          มีบัญชีอยู่แล้ว? <Link href="/login" style={{ color: '#0071e3', textDecoration: 'none' }}>เข้าสู่ระบบที่นี่</Link>
+        <div style={{ textAlign: 'center', marginTop: '18px', fontSize: '13px', color: '#86868b' }}>
+          มีบัญชีอยู่แล้ว? <Link href="/login" style={{ color: '#0071e3', textDecoration: 'none' }}>เข้าสู่ระบบ</Link>
         </div>
       </div>
     </div>
