@@ -7,14 +7,9 @@ export async function POST(request) {
   try {
     const { product, destination, incoterm } = await request.json();
 
-    const promptText = `วิเคราะห์รายการเอกสารทางกฎหมายและใบรับรองที่จำเป็นสำหรับการส่งออก:
-- สินค้า: ${product}
-- ประเทศปลายทาง: ${destination}
-- เงื่อนไข Incoterms: ${incoterm}`;
-
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: promptText,
+      contents: `วิเคราะห์เอกสารส่งออก สินค้า: ${product}, ปลายทาง: ${destination}, Incoterm: ${incoterm}`,
       config: {
         responseMimeType: 'application/json',
         responseSchema: {
@@ -26,33 +21,20 @@ export async function POST(request) {
                 type: 'OBJECT',
                 properties: {
                   doc_name: { type: 'STRING' },
-                  responsible_party: { type: 'STRING', description: 'Exporter, Middleman, or Freight Forwarder' },
+                  responsible_party: { type: 'STRING' },
                   is_mandatory: { type: 'BOOLEAN' },
                   description: { type: 'STRING' },
                 },
                 required: ['doc_name', 'responsible_party', 'is_mandatory'],
               },
             },
-            legal_warnings: {
-              type: 'ARRAY',
-              items: { type: 'STRING' },
-            },
           },
         },
       },
     });
 
-    const checklistData = JSON.parse(response.text);
-
-    return NextResponse.json({
-      success: true,
-      data: checklistData,
-    });
+    return NextResponse.json({ success: true, data: JSON.parse(response.text) });
   } catch (error) {
-    console.error('Checklist Error:', error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
