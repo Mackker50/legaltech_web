@@ -7,20 +7,19 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    taxId: '',
-    phone: '',
     email: '',
     password: '',
+    phone: '',
+    taxId: '',
     role: 'EXPORTER',
   });
-
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
+  const [statusMsg, setStatusMsg] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
+    setStatusMsg(null);
 
     try {
       const res = await fetch('/api/auth/register', {
@@ -30,163 +29,219 @@ export default function RegisterPage() {
       });
 
       const data = await res.json();
+
       if (res.ok && data.success) {
-        setMessage({ type: 'success', text: '✅ ' + data.message });
+        setStatusMsg({ type: 'success', text: '✅ ลงทะเบียนสำเร็จ! กำลังนำคุณไปยังหน้าเข้าสู่ระบบ...' });
         setTimeout(() => {
           window.location.href = '/login';
         }, 1500);
       } else {
-        setMessage({ type: 'error', text: '❌ ' + data.message });
+        setStatusMsg({ type: 'error', text: '❌ ' + (data.message || data.error) });
       }
     } catch (err) {
-      setMessage({ type: 'error', text: '❌ ไม่สามารถเชื่อมต่อกับระบบได้' });
+      setStatusMsg({ type: 'error', text: '❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้' });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '480px', margin: '20px auto' }}>
+    <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 0' }}>
       <div
         style={{
+          width: '100%',
+          maxWidth: '540px',
           backgroundColor: '#ffffff',
-          borderRadius: '20px',
-          padding: '36px',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-          border: '1px solid rgba(0,0,0,0.04)',
+          borderRadius: '24px',
+          padding: '40px',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02)',
+          border: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
-        <h1 style={{ fontSize: '24px', fontWeight: '600', color: '#1d1d1f', textAlign: 'center', margin: '0 0 6px 0' }}>
-          สร้างบัญชีเข้าใช้งาน
-        </h1>
-        <p style={{ fontSize: '13px', color: '#86868b', textAlign: 'center', margin: '0 0 24px 0' }}>
-          AgriLegal Pro — ระบบสัญญาส่งออกและบริหารจัดการสิทธิ์
-        </p>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{ fontSize: '32px', marginBottom: '8px' }}>🌾</div>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>
+            สร้างบัญชี AgriLegal Pro
+          </h1>
+          <p style={{ fontSize: '14px', color: '#86868b', margin: 0 }}>
+            เริ่มต้นจัดการสัญญาส่งออกและเอกสารกฎหมายการค้าเกษตร
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '14px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+        {/* Status Message */}
+        {statusMsg && (
+          <div
+            style={{
+              marginBottom: '24px',
+              padding: '14px 16px',
+              borderRadius: '14px',
+              fontSize: '13px',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              backgroundColor: statusMsg.type === 'success' ? '#eefbdf' : '#ffebeb',
+              color: statusMsg.type === 'success' ? '#297a00' : '#d70015',
+              border: `1px solid ${statusMsg.type === 'success' ? 'rgba(41, 122, 0, 0.15)' : 'rgba(215, 0, 21, 0.15)'}`,
+            }}
+          >
+            {statusMsg.text}
+          </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          {/* ชื่อ - นามสกุล */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>ชื่อ:</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '6px' }}>
+                ชื่อจริง <span style={{ color: '#d70015' }}>*</span>
+              </label>
               <input
                 type="text"
+                placeholder="สมชาย"
                 required
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d2d2d7', boxSizing: 'border-box' }}
+                style={inputStyle}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>นามสกุล:</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '6px' }}>
+                นามสกุล <span style={{ color: '#d70015' }}>*</span>
+              </label>
               <input
                 type="text"
+                placeholder="ใจดี"
                 required
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d2d2d7', boxSizing: 'border-box' }}
+                style={inputStyle}
               />
             </div>
           </div>
 
+          {/* บทบาทผู้ใช้งาน (Role) */}
           <div>
-            <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>เลขประจำตัวผู้เสียภาษี (Tax ID):</label>
-            <input
-              type="text"
-              required
-              placeholder="เช่น 0105561000000"
-              value={formData.taxId}
-              onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d2d2d7', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>เบอร์โทรศัพท์:</label>
-            <input
-              type="tel"
-              required
-              placeholder="เช่น 0812345678"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d2d2d7', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>บทบาทการใช้งาน:</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '6px' }}>
+              ประเภทธุรกิจ / บทบาทในระบบ
+            </label>
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d2d2d7', boxSizing: 'border-box', backgroundColor: '#fff' }}
+              style={{ ...inputStyle, backgroundColor: '#f5f5f7', cursor: 'pointer' }}
             >
-              <option value="EXPORTER">👨‍🌾 ผู้ส่งออก (Exporter)</option>
-              <option value="MIDDLEMAN">🤝 พ่อค้าคนกลาง (Middleman)</option>
-              <option value="FARMER">🧑‍🌾 เกษตรกร (Farmer)</option>
-              <option value="FREIGHT_FORWARDER">🚢 บริษัทขนส่ง (Forwarder)</option>
+              <option value="EXPORTER">🚢 ผู้ส่งออกสินค้าเกษตร (Exporter)</option>
+              <option value="FARMER">🚜 เกษตรกร / สหกรณ์การเกษตร (Farmer / Co-op)</option>
+              <option value="BUYER">🏢 ผู้ซื้อต่างประเทศ (Overseas Buyer)</option>
+              <option value="TRANSPORTER">🚚 ผู้ให้บริการขนส่ง / Forwarder</option>
             </select>
           </div>
 
+          {/* อีเมล */}
           <div>
-            <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>อีเมล:</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '6px' }}>
+              อีเมลธุรกิจ <span style={{ color: '#d70015' }}>*</span>
+            </label>
             <input
               type="email"
-              required
               placeholder="name@company.com"
+              required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d2d2d7', boxSizing: 'border-box' }}
+              style={inputStyle}
             />
           </div>
 
+          {/* รหัสผ่าน */}
           <div>
-            <label style={{ display: 'block', fontSize: '12px', color: '#86868b', marginBottom: '4px' }}>รหัสผ่าน:</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '6px' }}>
+              รหัสผ่าน <span style={{ color: '#d70015' }}>*</span>
+            </label>
             <input
               type="password"
+              placeholder="อย่างน้อย 8 ตัวอักษร"
               required
+              minLength={8}
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d2d2d7', boxSizing: 'border-box' }}
+              style={inputStyle}
             />
           </div>
 
+          {/* เบอร์โทรศัพท์ & Tax ID */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '6px' }}>
+                เบอร์โทรศัพท์
+              </label>
+              <input
+                type="tel"
+                placeholder="081-234-5678"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '6px' }}>
+                เลขผู้เสียภาษี (Tax ID)
+              </label>
+              <input
+                type="text"
+                placeholder="13 หลัก"
+                value={formData.taxId}
+                onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
+                style={inputStyle}
+              />
+            </div>
+          </div>
+
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
             style={{
-              backgroundColor: '#0071e3',
-              color: '#fff',
-              border: 'none',
+              marginTop: '10px',
+              padding: '14px',
               borderRadius: '980px',
-              padding: '12px',
-              fontSize: '14px',
-              fontWeight: '500',
+              backgroundColor: '#0071e3',
+              color: '#ffffff',
+              border: 'none',
+              fontSize: '15px',
+              fontWeight: '600',
               cursor: loading ? 'not-allowed' : 'pointer',
-              marginTop: '6px',
-              boxShadow: '0 4px 12px rgba(0,113,227,0.25)',
+              boxShadow: '0 4px 12px rgba(0, 113, 227, 0.3)',
+              transition: 'all 0.2s ease',
+              opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? 'กำลังบันทึกข้อมูล...' : 'ลงทะเบียนเข้าใช้งาน'}
+            {loading ? '⚡ กำลังสร้างบัญชีผู้ใช้...' : 'ยืนยันลงทะเบียน'}
           </button>
         </form>
 
-        {message && (
-          <div
-            style={{
-              marginTop: '16px',
-              padding: '12px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              backgroundColor: message.type === 'success' ? '#eefbdf' : '#ffebeb',
-              color: message.type === 'success' ? '#297a00' : '#d70015',
-            }}
-          >
-            {message.text}
-          </div>
-        )}
-
-        <div style={{ textAlign: 'center', marginTop: '18px', fontSize: '13px', color: '#86868b' }}>
-          มีบัญชีอยู่แล้ว? <Link href="/login" style={{ color: '#0071e3', textDecoration: 'none' }}>เข้าสู่ระบบ</Link>
+        {/* Footer Link */}
+        <div style={{ textAlign: 'center', marginTop: '28px', fontSize: '13px', color: '#86868b' }}>
+          มีบัญชีผู้ใช้อยู่แล้ว?{' '}
+          <Link href="/login" style={{ color: '#0071e3', fontWeight: '500', textDecoration: 'none' }}>
+            เข้าสู่ระบบที่นี่
+          </Link>
         </div>
       </div>
     </div>
   );
 }
+
+// Inline Style Object สำหรับ Input
+const inputStyle = {
+  width: '100%',
+  padding: '12px 14px',
+  borderRadius: '12px',
+  border: '1px solid #d2d2d7',
+  backgroundColor: '#ffffff',
+  fontSize: '14px',
+  color: '#1d1d1f',
+  outline: 'none',
+  boxSizing: 'border-box',
+  transition: 'border-color 0.2s ease',
+};
