@@ -7,20 +7,24 @@ export async function POST(request) {
     const body = await request.json();
     const { firstName, lastName, email, password, phone, taxId, role } = body;
 
-    // 1. ตรวจสอบข้อมูลบังคับ
-    if (!firstName || !lastName || !email || !password) {
+    // 1. ตรวจสอบข้อมูลบังคับ ต้องระบุครบถ้วน
+    if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !password) {
       return NextResponse.json(
         { success: false, message: 'กรุณากรอกข้อมูลบังคับ (ชื่อ, นามสกุล, อีเมล, รหัสผ่าน) ให้ครบถ้วน' },
         { status: 400 }
       );
     }
 
-    // 2. ตรวจสอบผู้ใช้งานซ้ำ
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanTaxId = taxId && taxId.trim() !== '' ? taxId.trim() : null;
+    const cleanPhone = phone && phone.trim() !== '' ? phone.trim() : null;
+
+    // 2. ตรวจสอบผู้ใช้งานซ้ำใน PostgreSQL (Email หรือ Tax ID)
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
-          { email: email.trim() },
-          ...(taxId ? [{ taxId: taxId.trim() }] : []),
+          { email: cleanEmail },
+          ...(cleanTaxId ? [{ taxId: cleanTaxId }] : []),
         ],
       },
     });
@@ -40,10 +44,10 @@ export async function POST(request) {
       data: {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        email: email.trim(),
+        email: cleanEmail,
         password: hashedPassword,
-        phone: phone ? phone.trim() : null,
-        taxId: taxId ? taxId.trim() : null,
+        phone: cleanPhone,
+        taxId: cleanTaxId,
         role: role || 'EXPORTER',
       },
     });
