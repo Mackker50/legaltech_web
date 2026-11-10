@@ -1,12 +1,26 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 
 export default function SupplyChainPage() {
-  const { theme, lang } = useAppContext();
+  const context = useAppContext() || {};
+  const theme = context.theme || {
+    textMain: '#111',
+    textSub: '#666',
+    cardBg: '#fff',
+    border: '#e5e5ea',
+    inputBorder: '#d1d1d6',
+    inputBg: '#f9f9fb',
+    link: '#0071e3',
+    shadow: '0 4px 12px rgba(0,0,0,0.05)'
+  };
+  const lang = context.lang || 'th';
+
   const [trackingId, setTrackingId] = useState('AG-2026-9901');
-  const [status, setStatus] = useState({
+  const status = {
     step: 3,
     stepsList: [
       { title: '📦 บรรจุสินค้าที่โรงงาน (Packing)', date: '08 พ.ย. 2026 - 10:00 น.' },
@@ -14,7 +28,7 @@ export default function SupplyChainPage() {
       { title: '🚢 กำลังขนส่งทางเรือ (In Transit)', date: '10 พ.ย. 2026 - 06:00 น. (ETA: 15 พ.ย.)' },
       { title: '🏁 ถึงท่าเรือปลายทาง (Port of Discharge)', date: 'รออัปเดต' }
     ]
-  });
+  };
 
   return (
     <div style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto' }}>

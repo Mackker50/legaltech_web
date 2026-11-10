@@ -1,17 +1,30 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 
 export default function TariffGuidePage() {
-  const { theme, lang } = useAppContext();
-  const [destination, setDestination] = useState('CN'); // ตั้งต้นที่ China
+  const context = useAppContext() || {};
+  const theme = context.theme || {
+    textMain: '#111',
+    textSub: '#666',
+    cardBg: '#fff',
+    border: '#e5e5ea',
+    inputBorder: '#d1d1d6',
+    inputBg: '#f9f9fb',
+    link: '#0071e3',
+    shadow: '0 4px 12px rgba(0,0,0,0.05)'
+  };
+  const lang = context.lang || 'th';
+
+  const [destination, setDestination] = useState('CN');
   const [productType, setProductType] = useState('rice');
   const [data, setData] = useState(null);
 
   const handleCheck = (e) => {
     e.preventDefault();
-    // ข้อมูลจำลองสำหรับตัวอย่างระบบ
     const db = {
       'CN-rice': { duty: '0% (ASEAN-China FTA)', phyto: 'ต้องมีใบรับรองสุขอนามัยพืช (Phytosanitary Certificate)', quota: 'มีโควตานำเข้าผ่าน COFCO' },
       'CN-durian': { duty: '0% (Zero Tariff)', phyto: 'ต้องผ่านการรับรองโรงคัดบรรจุ (GMP/GACP) และ Phytosanitary', quota: 'ไม่จำกัดโควตา' },
@@ -60,9 +73,9 @@ export default function TariffGuidePage() {
       {data && (
         <div style={{ backgroundColor: theme.cardBg, padding: '24px', borderRadius: '16px', border: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
           <h3 style={{ fontSize: '18px', color: theme.textMain, marginBottom: '16px' }}>📋 สรุปข้อกำหนดการส่งออก</h3>
-          <p style={{ marginBottom: '10px' }}><strong>อัตราภาษีขาเข้า:</strong> <span style={{ color: theme.link }}>{data.duty}</span></p>
-          <p style={{ marginBottom: '10px' }}><strong>มาตรการสุขอนามัย (SPS):</strong> {data.phyto}</p>
-          <p><strong>ระบบโควตา:</strong> {data.quota}</p>
+          <p style={{ color: theme.textMain, marginBottom: '10px' }}><strong>อัตราภาษีขาเข้า:</strong> <span style={{ color: theme.link }}>{data.duty}</span></p>
+          <p style={{ color: theme.textMain, marginBottom: '10px' }}><strong>มาตรการสุขอนามัย (SPS):</strong> {data.phyto}</p>
+          <p style={{ color: theme.textMain }}><strong>ระบบโควตา:</strong> {data.quota}</p>
         </div>
       )}
     </div>
