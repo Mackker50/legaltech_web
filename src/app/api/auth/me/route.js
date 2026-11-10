@@ -1,39 +1,24 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { readData } from '@/lib/flatfile';
 
 export async function GET(request) {
   try {
-    const userId = request.headers.get('x-user-id'); // ดึง ID จาก Header หรือ Session Cookie
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get('email');
 
-    if (!userId) {
-      return NextResponse.json({ success: false, isLoggedIn: false }, { status: 401 });
+    if (!email) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        phone: true,
-        taxId: true,
-        role: true,
-      },
-    });
+    const users = await readData('users.json');
+    const user = users.find((u) => u.email === email.toLowerCase().trim());
 
     if (!user) {
-      return NextResponse.json({ success: false, isLoggedIn: false }, { status: 404 });
+      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json({
-      success: true,
-      isLoggedIn: true,
-      user: {
-        ...user,
-        fullName: `${user.firstName} ${user.lastName}`,
-      },
-    });
+    const { password: _, ...userWithoutPassword } = user;
+    return NextResponse.json({ success: true, user: userWithoutPassword }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
