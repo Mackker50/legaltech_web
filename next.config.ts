@@ -1,7 +1,20 @@
-import type { NextConfig } from 'next';
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // ปล่อยว่างไว้เพื่อใช้ค่ามาตรฐาน ป้องกัน Type Error บน Vercel
+  /* config options here */
+  experimental: {
+    agentFeedback: true,
+  },
+  cacheComponents: true,
+  partialPrefetching: true,
+  turbopack: {
+    rules: {
+      "*.css": {
+        loaders: ["@tailwindcss/turbopack"],
+        as: "*.css",
+      },
+    },
+  },
 };
 
 export default nextConfig;
