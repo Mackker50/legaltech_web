@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 
@@ -56,9 +58,3 @@ export default function AutoFillPage() {
     </div>
   );
 }
-```[cite: 5]
-
-### คุณสมบัติหลักของหน้าคานี้:
-* **Global Theme & Language Support:** ดึงค่าการตั้งค่าโหมดมืด/สว่าง (`theme`) และภาษา (`lang`) มาแสดงผลแบบอัตโนมัติผ่าน `useAppContext()`[cite: 5]
-* **Apple-Inspired Minimalist Design:** ใช้การจัดวางโครงสร้าง Clean UI, ขอบมนโค้ง, และชุดสีที่สอดคล้องกับหน้าอื่นๆ ในระบบ AgriLegal Pro[cite: 5]
-* **Interactive State:** รองรับการกรอกรหัสสัญญา จำลองการดึงข้อมูล และแสดงผลลัพธ์ความสำเร็จทันทีหลังกดประมวลผล[cite: 5]

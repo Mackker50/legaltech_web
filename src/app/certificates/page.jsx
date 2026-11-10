@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 
@@ -67,4 +69,3 @@ export default function CertificatesPage() {
     </div>
   );
 }
-```[cite: 4]
