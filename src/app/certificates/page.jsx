@@ -6,7 +6,19 @@ import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 
 export default function CertificatesPage() {
-  const { theme, lang } = useAppContext();
+  const context = useAppContext() || {};
+  const theme = context.theme || {
+    textMain: '#111',
+    textSub: '#666',
+    cardBg: '#fff',
+    border: '#e5e5ea',
+    inputBorder: '#d1d1d6',
+    inputBg: '#f9f9fb',
+    link: '#0071e3',
+    shadow: '0 4px 12px rgba(0,0,0,0.05)'
+  };
+  const lang = context.lang || 'th';
+
   const [certType, setCertType] = useState('PHYTO');
   const [submitted, setSubmitted] = useState(false);
 
