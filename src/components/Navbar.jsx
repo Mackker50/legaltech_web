@@ -1,25 +1,38 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+
+const getStoredSession = () => {
+  if (typeof window === 'undefined') {
+    return { isLoggedIn: false, userProfile: null };
+  }
+
+  const savedUser = window.localStorage.getItem('user_session');
+  if (!savedUser) {
+    return { isLoggedIn: false, userProfile: null };
+  }
+
+  try {
+    const parsed = JSON.parse(savedUser);
+
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new Error('Invalid user_session payload');
+    }
+
+    return { isLoggedIn: true, userProfile: parsed };
+  } catch (error) {
+    window.localStorage.removeItem('user_session');
+    return { isLoggedIn: false, userProfile: null };
+  }
+};
 
 export default function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [userProfile, setUserProfile] = useState(null);
+  const initialSession = getStoredSession();
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem('user_session');
-    if (savedUser) {
-      try {
-        const parsed = JSON.parse(savedUser);
-        setUserProfile(parsed);
-        setIsLoggedIn(true);
-      } catch (e) {
-        localStorage.removeItem('user_session');
-      }
-    }
-  }, []);
+  const [isLoggedIn, setIsLoggedIn] = useState(initialSession.isLoggedIn);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [userProfile, setUserProfile] = useState(initialSession.userProfile);
 
   const handleLogout = () => {
     localStorage.removeItem('user_session');
