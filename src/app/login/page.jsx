@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -25,12 +27,15 @@ export default function LoginPage() {
       if (res.ok && data.success) {
         setMessage({ type: 'success', text: '✅ เข้าสู่ระบบสำเร็จ! กำลังพาคุณไปยัง Workspace...' });
         
-        // บันทึก Session ข้อมูลผู้ใช้ เพื่อให้ Navbar อัปเดตสถานะทันที
+        // บันทึก Session ลง localStorage (บันทึกทั้งสองชื่อคีย์เพื่อความเข้ากันได้ของระบบ)
         localStorage.setItem('user_session', JSON.stringify(data.user));
+        localStorage.setItem('user', JSON.stringify(data.user));
 
+        // หน่วงเวลาเล็กน้อยเพื่อให้ผู้ใช้เห็นกล่องแจ้งเตือนความสำเร็จ แล้วเปลี่ยนหน้าไปยัง /workspace
         setTimeout(() => {
+          // ใช้ window.location.href เพื่อเคลียร์ Memory State ของเบราว์เซอร์ให้ Navbar อัปเดตสถานะทันที
           window.location.href = '/workspace';
-        }, 1200);
+        }, 800);
       } else {
         setMessage({ type: 'error', text: '❌ ' + (data.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง') });
       }
@@ -106,6 +111,9 @@ export default function LoginPage() {
               <label style={{ fontSize: '12px', fontWeight: '600', color: '#1d1d1f', margin: 0 }}>
                 รหัสผ่าน <span style={{ color: '#d70015' }}>*</span>
               </label>
+              <Link href="/forgot-password" style={{ fontSize: '12px', color: '#0071e3', textDecoration: 'none' }}>
+                ลืมรหัสผ่าน?
+              </Link>
             </div>
             <input
               type="password"
