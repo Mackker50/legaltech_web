@@ -1,20 +1,9 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
+import path from 'path';
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  experimental: {
-    agentFeedback: true,
-  },
-  cacheComponents: true,
-  partialPrefetching: true,
-  turbopack: {
-    rules: {
-      "*.css": {
-        loaders: ["@tailwindcss/turbopack"],
-        as: "*.css",
-      },
-    },
-  },
+  // กำหนด Root ให้เจาะจงที่โฟลเดอร์โปรเจกต์นี้เพื่อแก้ปัญหาเตือนเรื่องหลาย lockfiles
+  outputFileTracingRoot: path.join(__dirname),
 };
 
 export default nextConfig;
