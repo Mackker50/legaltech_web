@@ -5,63 +5,58 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
-  const [isDark, setIsDark] = useState(false);
   const [lang, setLang] = useState('th');
-  const [mounted, setMounted] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [user, setUser] = useState(null);
 
+  // ดึง Session จาก localStorage ตอนเริ่มต้น
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const savedLang = localStorage.getItem('lang');
-    if (savedTheme === 'dark') setIsDark(true);
-    if (savedLang) setLang(savedLang);
-    setMounted(true);
+    const savedUser = localStorage.getItem('user_session') || localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error('Failed to parse saved user:', e);
+      }
+    }
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = !isDark;
-    setIsDark(newTheme);
-    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+  const login = (userData) => {
+    const sessionUser = userData || { name: 'Thitipong L.', email: 'thitipong@agrilegal.pro', role: 'EXPORTER' };
+    setUser(sessionUser);
+    localStorage.setItem('user_session', JSON.stringify(sessionUser));
+    localStorage.setItem('user', JSON.stringify(sessionUser));
   };
 
-  const toggleLang = () => {
-    const newLang = lang === 'th' ? 'en' : 'th';
-    setLang(newLang);
-    localStorage.setItem('lang', newLang);
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user_session');
+    localStorage.removeItem('user');
   };
 
-  // ชุดสี Theme แบบ Global นำไปใช้กับ Component อื่นๆ ได้เลย
   const theme = {
-    bg: isDark ? '#000000' : '#f5f5f7',
-    cardBg: isDark ? '#1c1c1e' : '#ffffff',
-    textMain: isDark ? '#f5f5f7' : '#1d1d1f',
-    textSub: isDark ? '#a1a1a6' : '#86868b',
-    border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-    inputBorder: isDark ? '#38383a' : '#d2d2d7',
-    inputBg: isDark ? '#1c1c1e' : '#ffffff',
-    shadow: isDark ? '0 20px 40px rgba(0,0,0,0.5)' : '0 20px 40px rgba(0,0,0,0.04)',
-    link: isDark ? '#2997ff' : '#0071e3',
+    bg: isDarkMode ? '#0d0d0e' : '#f5f5f7',
+    cardBg: isDarkMode ? '#1c1c1e' : '#ffffff',
+    textMain: isDarkMode ? '#f5f5f7' : '#1d1d1f',
+    textSub: isDarkMode ? '#8e8e93' : '#86868b',
+    border: isDarkMode ? '#2c2c2e' : '#e5e5ea',
+    inputBg: isDarkMode ? '#2c2c2e' : '#fafafa',
+    inputBorder: isDarkMode ? '#3a3a3c' : '#d2d2d7',
+    link: '#0071e3',
+    linkHover: '#0077ed',
+    shadow: isDarkMode ? '0 8px 30px rgba(0,0,0,0.5)' : '0 8px 30px rgba(0,0,0,0.04)',
+    glassBg: isDarkMode ? 'rgba(28, 28, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
   };
-
-  if (!mounted) return null; // ป้องกัน Hydration Error
 
   return (
-    <AppContext.Provider value={{ isDark, toggleTheme, lang, toggleLang, theme }}>
-      {/* Wrapper หลักที่ครอบทั้งแอป เพื่อปรับพื้นหลังและสีอักษรพื้นฐานอัตโนมัติ */}
-      <div 
-        style={{ 
-          backgroundColor: theme.bg, 
-          color: theme.textMain, 
-          minHeight: '100vh', 
-          transition: 'background-color 0.3s ease, color 0.3s ease' 
-        }}
-      >
+    <AppContext.Provider value={{ lang, setLang, isDarkMode, setIsDarkMode, theme, user, login, logout }}>
+      <div style={{ backgroundColor: theme.bg, color: theme.textMain, minHeight: '100vh', transition: 'background-color 0.3s ease, color 0.3s ease' }}>
         {children}
       </div>
     </AppContext.Provider>
   );
 }
 
-// Custom Hook สำหรับเรียกใช้ Context ง่ายๆ
 export function useAppContext() {
   return useContext(AppContext);
 }

@@ -1,11 +1,26 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useAppContext } from '@/context/AppContext';
 
 export default function LoginPage() {
-  const router = useRouter();
+  const context = useAppContext() || {};
+  const { theme, lang, login } = context;
+
+  const currentTheme = theme || {
+    cardBg: '#ffffff',
+    textMain: '#1d1d1f',
+    textSub: '#86868b',
+    border: '#d2d2d7',
+    inputBg: '#ffffff',
+    inputBorder: '#d2d2d7',
+    link: '#0071e3',
+    shadow: '0 20px 40px rgba(0, 0, 0, 0.04)',
+  };
+
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -25,76 +40,72 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setMessage({ type: 'success', text: '✅ เข้าสู่ระบบสำเร็จ! กำลังพาคุณไปยัง Workspace...' });
+        setMessage({ type: 'success', text: lang === 'en' ? '✅ Login successful! Redirecting to home...' : '✅ เข้าสู่ระบบสำเร็จ! กำลังพาคุณไปยังหน้าหลัก...' });
         
-        // บันทึก Session ลง localStorage (บันทึกทั้งสองชื่อคีย์เพื่อความเข้ากันได้ของระบบ)
+        if (login) login(data.user);
         localStorage.setItem('user_session', JSON.stringify(data.user));
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        // หน่วงเวลาเล็กน้อยเพื่อให้ผู้ใช้เห็นกล่องแจ้งเตือนความสำเร็จ แล้วเปลี่ยนหน้าไปยัง /workspace
+        // เด้งไปยังหน้าหลัก "/" ทันทีเพื่อให้ Navbar เปลี่ยนปุ่มเป็นโปรไฟล์
         setTimeout(() => {
-          // ใช้ window.location.href เพื่อเคลียร์ Memory State ของเบราว์เซอร์ให้ Navbar อัปเดตสถานะทันที
-          window.location.href = '/workspace';
-        }, 800);
+          window.location.href = '/';
+        }, 500);
       } else {
-        setMessage({ type: 'error', text: '❌ ' + (data.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง') });
+        setMessage({ type: 'error', text: '❌ ' + (data.message || (lang === 'en' ? 'Invalid email or password' : 'อีเมลหรือรหัสผ่านไม่ถูกต้อง')) });
       }
     } catch (err) {
-      setMessage({ type: 'error', text: '❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้' });
+      setMessage({ type: 'error', text: lang === 'en' ? '❌ Cannot connect to server' : '❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้' });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 0' }}>
+    <div style={{ minHeight: '85vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
       <div
         style={{
           width: '100%',
-          maxWidth: '440px',
-          backgroundColor: '#ffffff',
-          borderRadius: '24px',
+          maxWidth: '420px',
+          backgroundColor: currentTheme.cardBg,
+          borderRadius: '28px',
           padding: '40px',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02)',
-          border: '1px solid rgba(0, 0, 0, 0.06)',
+          boxShadow: currentTheme.shadow,
+          border: `1px solid ${currentTheme.border}`,
         }}
       >
-        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ fontSize: '32px', marginBottom: '8px' }}>🌾</div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#1d1d1f', margin: '0 0 6px 0', letterSpacing: '-0.5px' }}>
-            เข้าสู่ระบบ AgriLegal Pro
+          <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌾</div>
+          <h1 style={{ fontSize: '24px', fontWeight: '700', color: currentTheme.textMain, margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>
+            {lang === 'en' ? 'Sign in to AgriLegal Pro' : 'เข้าสู่ระบบ AgriLegal Pro'}
           </h1>
-          <p style={{ fontSize: '14px', color: '#86868b', margin: 0 }}>
-            ยินดีต้อนรับกลับ แพลตฟอร์มบริหารสัญญาส่งออกเกษตร
+          <p style={{ fontSize: '14px', color: currentTheme.textSub, margin: 0, lineHeight: '1.4' }}>
+            {lang === 'en' ? 'Welcome back to agricultural export compliance platform' : 'ยินดีต้อนรับกลับ แพลตฟอร์มบริหารสัญญาส่งออกเกษตร'}
           </p>
         </div>
 
-        {/* Status Message */}
         {message && (
           <div
             style={{
               marginBottom: '24px',
               padding: '14px 16px',
-              borderRadius: '14px',
+              borderRadius: '16px',
               fontSize: '13px',
               fontWeight: '500',
               display: 'flex',
               alignItems: 'center',
-              backgroundColor: message.type === 'success' ? '#eefbdf' : '#ffebeb',
+              backgroundColor: message.type === 'success' ? 'rgba(41, 122, 0, 0.08)' : 'rgba(215, 0, 21, 0.08)',
               color: message.type === 'success' ? '#297a00' : '#d70015',
-              border: `1px solid ${message.type === 'success' ? 'rgba(41, 122, 0, 0.15)' : 'rgba(215, 0, 21, 0.15)'}`,
+              border: `1px solid ${message.type === 'success' ? 'rgba(41, 122, 0, 0.2)' : 'rgba(215, 0, 21, 0.2)'}`,
             }}
           >
             {message.text}
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#1d1d1f', marginBottom: '6px' }}>
-              อีเมลธุรกิจ <span style={{ color: '#d70015' }}>*</span>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: currentTheme.textMain, marginBottom: '6px' }}>
+              {lang === 'en' ? 'Business Email' : 'อีเมลธุรกิจ'} <span style={{ color: '#d70015' }}>*</span>
             </label>
             <input
               type="email"
@@ -102,26 +113,46 @@ export default function LoginPage() {
               placeholder="name@company.com"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              style={inputStyle}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '14px',
+                border: `1px solid ${currentTheme.inputBorder}`,
+                backgroundColor: currentTheme.inputBg,
+                fontSize: '14px',
+                color: currentTheme.textMain,
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
             />
           </div>
 
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#1d1d1f', margin: 0 }}>
-                รหัสผ่าน <span style={{ color: '#d70015' }}>*</span>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: currentTheme.textMain, margin: 0 }}>
+                {lang === 'en' ? 'Password' : 'รหัสผ่าน'} <span style={{ color: '#d70015' }}>*</span>
               </label>
-              <Link href="/forgot-password" style={{ fontSize: '12px', color: '#0071e3', textDecoration: 'none' }}>
-                ลืมรหัสผ่าน?
+              <Link href="/forgot-password" style={{ fontSize: '12px', color: currentTheme.link, textDecoration: 'none', fontWeight: '500' }}>
+                {lang === 'en' ? 'Forgot password?' : 'ลืมรหัสผ่าน?'}
               </Link>
             </div>
             <input
               type="password"
               required
-              placeholder="กรอกรหัสผ่านของคุณ"
+              placeholder={lang === 'en' ? 'Enter your password' : 'กรอกรหัสผ่านของคุณ'}
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              style={inputStyle}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '14px',
+                border: `1px solid ${currentTheme.inputBorder}`,
+                backgroundColor: currentTheme.inputBg,
+                fontSize: '14px',
+                color: currentTheme.textMain,
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
             />
           </div>
 
@@ -129,46 +160,30 @@ export default function LoginPage() {
             type="submit"
             disabled={loading}
             style={{
-              marginTop: '10px',
+              marginTop: '12px',
               padding: '14px',
               borderRadius: '980px',
-              backgroundColor: '#0071e3',
+              backgroundColor: currentTheme.link,
               color: '#ffffff',
               border: 'none',
               fontSize: '15px',
               fontWeight: '600',
               cursor: loading ? 'not-allowed' : 'pointer',
-              boxShadow: '0 4px 12px rgba(0, 113, 227, 0.3)',
-              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 16px rgba(0, 113, 227, 0.3)',
               opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? '⚡ กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+            {loading ? (lang === 'en' ? 'Signing in...' : '⚡ กำลังเข้าสู่ระบบ...') : (lang === 'en' ? 'Sign In' : 'เข้าสู่ระบบ')}
           </button>
         </form>
 
-        {/* Footer Link */}
-        <div style={{ textAlign: 'center', marginTop: '28px', fontSize: '13px', color: '#86868b' }}>
-          ยังไม่มีบัญชีผู้ใช้?{' '}
-          <Link href="/register" style={{ color: '#0071e3', fontWeight: '500', textDecoration: 'none' }}>
-            สร้างบัญชีใหม่ที่นี่
+        <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '13px', color: currentTheme.textSub }}>
+          {lang === 'en' ? "Don't have an account? " : 'ยังไม่มีบัญชีผู้ใช้? '}{' '}
+          <Link href="/register" style={{ color: currentTheme.link, fontWeight: '600', textDecoration: 'none' }}>
+            {lang === 'en' ? 'Sign up here' : 'สร้างบัญชีใหม่ที่นี่'}
           </Link>
         </div>
       </div>
     </div>
   );
 }
-
-// Inline Style Object สำหรับ Input ให้ตรงกับ Register Page
-const inputStyle = {
-  width: '100%',
-  padding: '12px 14px',
-  borderRadius: '12px',
-  border: '1px solid #d2d2d7',
-  backgroundColor: '#ffffff',
-  fontSize: '14px',
-  color: '#1d1d1f',
-  outline: 'none',
-  boxSizing: 'border-box',
-  transition: 'border-color 0.2s ease',
-};
