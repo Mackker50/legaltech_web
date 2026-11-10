@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 
-export default function CertificatesPage() {
+export default function DocumentsPage() {
   const context = useAppContext() || {};
   const theme = context.theme || {
     textMain: '#111',
@@ -19,65 +19,61 @@ export default function CertificatesPage() {
   };
   const lang = context.lang || 'th';
 
-  const [certType, setCertType] = useState('PHYTO');
-  const [submitted, setSubmitted] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSubmitted(true);
-  };
+  const documents = [
+    { id: 'DOC-001', name: 'สัญญาซื้อขายทุเรียนสด (Sales Contract)', type: 'PDF', date: '2026-11-01', status: 'สมบูรณ์' },
+    { id: 'DOC-002', name: 'ใบรับรองสุขอนามัยพืช (Phytosanitary Cert)', type: 'PDF', date: '2026-11-05', status: 'รออนุมัติ' },
+    { id: 'DOC-003', name: 'หนังสือรับรองถิ่นกำเนิดสินค้า (Form E)', type: 'PDF', date: '2026-11-08', status: 'สมบูรณ์' },
+    { id: 'DOC-004', name: 'ใบกำกับสินค้า (Commercial Invoice)', type: 'DOCX', date: '2026-11-09', status: 'ฉบับร่าง' },
+  ];
+
+  const filteredDocs = documents.filter(doc => 
+    doc.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    doc.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ padding: '40px 20px', maxWidth: '900px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '8px', color: theme.textMain }}>
-        {lang === 'th' ? '📜 ระบบขอใบรับรองและเชื่อมต่อหน่วยงาน' : '📜 Certificate Application & Agency Link'}
+        {lang === 'th' ? '📁 คลังเอกสารการส่งออก' : '📁 Document Repository'}
       </h1>
       <p style={{ color: theme.textSub, marginBottom: '24px' }}>
-        {lang === 'th' ? 'ยื่นคำขอใบรับรองสุขอนามัยพืช (Phytosanitary) และเชื่อมต่อกรมวิชาการเกษตร' : 'Apply for Phytosanitary and export certificates directly.'}
+        {lang === 'th' ? 'จัดการ ดึงข้อมูล และจัดเก็บเอกสารทางกฎหมายและศุลกากรย้อนหลัง' : 'Manage, search, and store your export compliance documents.'}
       </p>
 
-      {!submitted ? (
-        <form onSubmit={handleSubmit} style={{ backgroundColor: theme.cardBg, padding: '24px', borderRadius: '16px', border: `1px solid ${theme.border}`, boxShadow: theme.shadow, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: theme.textMain, marginBottom: '6px' }}>
-              {lang === 'th' ? 'ประเภทใบรับรอง' : 'Certificate Type'}
-            </label>
-            <select 
-              value={certType}
-              onChange={(e) => setCertType(e.target.value)}
-              style={{ width: '100%', padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, backgroundColor: theme.inputBg, color: theme.textMain, outline: 'none' }}
-            >
-              <option value="PHYTO">ใบรับรองสุขอนามัยพืช (Phytosanitary Certificate - DOA)</option>
-              <option value="ORIGIN">หนังสือรับรองถิ่นกำเนิดสินค้า (Certificate of Origin - DFT)</option>
-            </select>
-          </div>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+        <input 
+          type="text"
+          placeholder={lang === 'th' ? 'ค้นหาเอกสาร หรือรหัสสัญญา...' : 'Search documents or IDs...'}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ flex: 1, padding: '12px 16px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, backgroundColor: theme.inputBg, color: theme.textMain, outline: 'none' }}
+        />
+      </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: theme.textMain, marginBottom: '6px' }}>
-              {lang === 'th' ? 'หมายเลขล็อตสินค้า / แปลงเกษตร' : 'Lot / Farm ID'}
-            </label>
-            <input 
-              type="text"
-              required
-              placeholder="FARM-TH-6601"
-              style={{ width: '100%', padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, backgroundColor: theme.inputBg, color: theme.textMain, outline: 'none', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <button type="submit" style={{ padding: '14px', borderRadius: '980px', backgroundColor: theme.link, color: '#fff', border: 'none', fontWeight: '600', cursor: 'pointer' }}>
-            {lang === 'th' ? '📤 ส่งคำขอไปยังหน่วยงาน' : 'Submit Application'}
-          </button>
-        </form>
-      ) : (
-        <div style={{ backgroundColor: theme.cardBg, padding: '24px', borderRadius: '16px', border: `1px solid ${theme.border}`, boxShadow: theme.shadow, textAlign: 'center' }}>
-          <div style={{ fontSize: '40px', marginBottom: '12px' }}>🎉</div>
-          <h3 style={{ fontSize: '20px', color: theme.textMain, marginBottom: '8px' }}>ส่งคำขอสำเร็จเรียบร้อย!</h3>
-          <p style={{ color: theme.textSub, marginBottom: '16px' }}>ระบบได้ส่งข้อมูลเชื่อมต่อไปยังหน่วยงานที่เกี่ยวข้องและกำลังรอการอนุมัติ (Tracking Ref: #CERT-9821)</p>
-          <button onClick={() => setSubmitted(false)} style={{ padding: '10px 20px', borderRadius: '8px', backgroundColor: theme.inputBorder, color: theme.textMain, border: 'none', cursor: 'pointer' }}>
-            ยื่นคำขอใหม่
-          </button>
-        </div>
-      )}
+      <div style={{ backgroundColor: theme.cardBg, borderRadius: '16px', border: `1px solid ${theme.border}`, boxShadow: theme.shadow, overflow: 'hidden' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${theme.border}`, backgroundColor: theme.inputBg }}>
+              <th style={{ padding: '16px', color: theme.textMain, fontSize: '14px' }}>รหัสเอกสาร</th>
+              <th style={{ padding: '16px', color: theme.textMain, fontSize: '14px' }}>ชื่อเอกสาร</th>
+              <th style={{ padding: '16px', color: theme.textMain, fontSize: '14px' }}>วันที่สร้าง</th>
+              <th style={{ padding: '16px', color: theme.textMain, fontSize: '14px' }}>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredDocs.map((doc) => (
+              <tr key={doc.id} style={{ borderBottom: `1px solid ${theme.border}` }}>
+                <td style={{ padding: '16px', color: theme.link, fontWeight: '600' }}>{doc.id}</td>
+                <td style={{ padding: '16px', color: theme.textMain }}>{doc.name}</td>
+                <td style={{ padding: '16px', color: theme.textSub, fontSize: '13px' }}>{doc.date}</td>
+                <td style={{ padding: '16px', color: doc.status === 'สมบูรณ์' ? '#297a00' : theme.textSub }}>{doc.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
