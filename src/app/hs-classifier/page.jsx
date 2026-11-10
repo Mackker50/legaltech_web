@@ -1,16 +1,29 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 
 export default function HSClassifierPage() {
-  const { theme, lang } = useAppContext();
+  const context = useAppContext() || {};
+  const theme = context.theme || {
+    textMain: '#111',
+    textSub: '#666',
+    cardBg: '#fff',
+    border: '#e5e5ea',
+    inputBorder: '#d1d1d6',
+    inputBg: '#f9f9fb',
+    link: '#0071e3',
+    shadow: '0 4px 12px rgba(0,0,0,0.05)'
+  };
+  const lang = context.lang || 'th';
+
   const [keyword, setKeyword] = useState('');
   const [result, setResult] = useState(null);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // ตัวอย่างจำลองการค้นหา HS Code สินค้าเกษตร
     if (keyword.includes('ข้าว') || keyword.toLowerCase().includes('rice')) {
       setResult({ code: '1006.30', name: 'ข้าวขาว (Semi-milled or wholly milled rice)', duty: '0% (ภายใต้ FTA)' });
     } else if (keyword.includes('ทุเรียน') || keyword.toLowerCase().includes('durian')) {
@@ -35,40 +48,15 @@ export default function HSClassifierPage() {
           placeholder={lang === 'th' ? 'ระบุชื่อสินค้า เช่น ข้าว, ทุเรียน...' : 'Enter product name...'}
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-          style={{ 
-            flex: 1, 
-            padding: '12px 16px', 
-            borderRadius: '12px', 
-            border: `1px solid ${theme.inputBorder}`, 
-            backgroundColor: theme.inputBg, 
-            color: theme.textMain, 
-            outline: 'none' 
-          }}
+          style={{ flex: 1, padding: '12px 16px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, backgroundColor: theme.inputBg, color: theme.textMain, outline: 'none' }}
         />
-        <button 
-          type="submit" 
-          style={{ 
-            padding: '12px 24px', 
-            borderRadius: '12px', 
-            backgroundColor: theme.link, 
-            color: '#fff', 
-            border: 'none', 
-            fontWeight: '600', 
-            cursor: 'pointer' 
-          }}
-        >
+        <button type="submit" style={{ padding: '12px 24px', borderRadius: '12px', backgroundColor: theme.link, color: '#fff', border: 'none', fontWeight: '600', cursor: 'pointer' }}>
           {lang === 'th' ? 'ค้นหา' : 'Search'}
         </button>
       </form>
 
       {result && (
-        <div style={{ 
-          backgroundColor: theme.cardBg, 
-          padding: '24px', 
-          borderRadius: '16px', 
-          border: `1px solid ${theme.border}`, 
-          boxShadow: theme.shadow 
-        }}>
+        <div style={{ backgroundColor: theme.cardBg, padding: '24px', borderRadius: '16px', border: `1px solid ${theme.border}`, boxShadow: theme.shadow }}>
           <h3 style={{ fontSize: '18px', color: theme.textMain, marginBottom: '12px' }}>📌 ผลการวิเคราะห์ HS Code</h3>
           <p style={{ color: theme.textMain, marginBottom: '8px' }}><strong>HS Code:</strong> <span style={{ color: theme.link, fontWeight: 'bold' }}>{result.code}</span></p>
           <p style={{ color: theme.textMain, marginBottom: '8px' }}><strong>รายละเอียด:</strong> {result.name}</p>
