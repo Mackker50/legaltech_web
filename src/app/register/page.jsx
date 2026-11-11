@@ -4,87 +4,235 @@ export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useAppContext } from '@/context/AppContext';
 
 export default function RegisterPage() {
-  const router = useRouter();
+  const context = useAppContext() || {};
+  const { login } = context;
 
-  const [form, setForm] = useState({
-    name: '',
+  const [formData, setFormData] = useState({
+    fullName: '',
+    birthDate: '',
+    address: '',
+    taxId: '',
+    phone: '',
     email: '',
     password: '',
-    phone: '',
-    company: '',
-    taxId: '',
-    address: '',
-    role: 'ผู้ส่งออกสินค้าเกษตร (Exporter)'
+    confirmPassword: '',
+    role: 'EXPORTER'
   });
 
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(null);
-  const [successMsg, setSuccessMsg] = useState(null);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน');
+      return;
+    }
+
     setLoading(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
 
     try {
-      const res = await fetch('/api/users', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'register',
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          company: form.company,
-          taxId: form.taxId,
-          address: form.address,
-          role: form.role
-        })
+        body: JSON.stringify(formData),
       });
 
       const data = await res.json();
 
-      if (data.success) {
-        setSuccessMsg('✅ สมัครสมาชิกสำเร็จ! กำลังนำท่านเข้าสู่ระบบ...');
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('user', JSON.stringify(data.user || form));
-        }
-        setTimeout(() => {
-          router.push('/workspace');
-          router.refresh();
-        }, 1200);
+      if (res.ok && data.success) {
+        if (login) login(data.user);
+        localStorage.setItem('user_session', JSON.stringify(data.user));
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        window.location.href = '/workspace';
       } else {
-        setErrorMsg(data.message || 'ไม่สามารถลงทะเบียนได้ กรุณาลองใหม่อีกครั้ง');
+        setError(data.message || 'กรุณากรอกข้อมูลให้ถูกต้องครบถ้วน');
       }
     } catch (err) {
-      console.error('Registration fetch error:', err);
-      // Fallback สำหรับเครื่องลูกข่าย
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify({ ...form, isLoggedIn: true }));
-      }
-      setSuccessMsg('✅ ลงทะเบียนและเข้าสู่ระบบเรียบร้อย');
-      setTimeout(() => {
-        router.push('/workspace');
-        router.refresh();
-      }, 1000);
+      setError('ไม่สามารถเชื่อมต่อระบบเซิร์ฟเวอร์ได้');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ backgroundColor: '#f8fafc', minHeight: '90vh', padding: '40px 20px', fontFamily: "'Prompt', sans-serif" }}>
-      <div style={{ maxWidth: '560px', margin: '0 auto', backgroundColor: '#ffffff', borderRadius: '18px', border: '1px solid #e2e8f0', padding: '36px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+    <div style={{ minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', backgroundColor: '#f8f9fa', fontFamily: "'Prompt', sans-serif" }}>
+      <div style={{ width: '100%', maxWidth: '580px', backgroundColor: '#ffffff', borderRadius: '16px', padding: '36px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #e9ecef' }}>
         
-        <div style={{ textAlign: 'center', marginBottom: '26px' }}>
-          <div style={{ fontSize: '32px', marginBottom: '6px' }}>🌱</div>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#1b433
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <div style={{ fontSize: '36px', marginBottom: '8px' }}>🌾</div>
+          <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#1b4332', margin: '0 0 6px 0' }}>
+            ลงทะเบียนผู้ใช้งาน AgriLegal Pro
+          </h1>
+          <p style={{ fontSize: '13px', color: '#6c757d', margin: 0 }}>
+            กรอกข้อมูลประจำตัวและที่อยู่เพื่อเปิดบัญชีผู้ส่งออก/ผู้ประกอบการ
+          </p>
+        </div>
+
+        {error && (
+          <div style={{ marginBottom: '20px', padding: '12px 14px', borderRadius: '8px', fontSize: '13px', backgroundColor: '#fff0f0', color: '#e63946', border: '1px solid #ffcdd2', fontWeight: '600' }}>
+            ❌ {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          
+          {/* ชื่อ-สกุล */}
+          <div style={{ gridColumn: 'span 2' }}>
+            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>
+              ชื่อ - นามสกุล (หรือชื่อบริษัท) <span style={{ color: '#e63946' }}>*</span>
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="นายสมชาย ใจดี / บริษัท ไทย อกริ จำกัด"
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+              style={{ width: '100%', padding: '11px 14px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          {/* วันเดือนปีเกิด */}
+          <div>
+            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>
+              วัน/เดือน/ปีเกิด <span style={{ color: '#e63946' }}>*</span>
+            </label>
+            <input
+              type="date"
+              required
+              value={formData.birthDate}
+              onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+              style={{ width: '100%', padding: '11px 14px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', outline: 'none', boxSizing: 'border-box', backgroundColor: '#fff' }}
+            />
+          </div>
+
+          {/* เบอร์โทรศัพท์ */}
+          <div>
+            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>
+              เบอร์โทรศัพท์ <span style={{ color: '#e63946' }}>*</span>
+            </label>
+            <input
+              type="tel"
+              required
+              placeholder="0812345678"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              style={{ width: '100%', padding: '11px 14px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          {/* เลขประจำตัวผู้เสียภาษี Tax ID */}
+          <div style={{ gridColumn: 'span 2' }}>
+            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>
+              เลขประจำตัวผู้เสียภาษี (Tax ID / เลขบัตรประชาชน) <span style={{ color: '#e63946' }}>*</span>
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="เลข 13 หลัก เช่น 0105556000000"
+              value={formData.taxId}
+              onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
+              style={{ width: '100%', padding: '11px 14px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          {/* ข้อมูลที่อยู่ */}
+          <div style={{ gridColumn: 'span 2' }}>
+            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>
+              ที่อยู่ปัจจุบัน / ที่ตั้งสถานประกอบการ <span style={{ color: '#e63946' }}>*</span>
+            </label>
+            <textarea
+              required
+              rows={2}
+              placeholder="บ้านเลขที่, ถนน, แขวง/ตำบล, เขต/อำเภอ, จังหวัด, รหัสไปรษณีย์"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              style={{ width: '100%', padding: '11px 14px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
+            />
+          </div>
+
+          {/* อีเมล */}
+          <div style={{ gridColumn: 'span 2' }}>
+            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>
+              อีเมลสำหรับเข้าสู่ระบบ <span style={{ color: '#e63946' }}>*</span>
+            </label>
+            <input
+              type="email"
+              required
+              placeholder="name@company.com"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              style={{ width: '100%', padding: '11px 14px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          {/* รหัสผ่าน */}
+          <div>
+            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>
+              รหัสผ่าน <span style={{ color: '#e63946' }}>*</span>
+            </label>
+            <input
+              type="password"
+              required
+              placeholder="อย่างน้อย 6 ตัวอักษร"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              style={{ width: '100%', padding: '11px 14px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          {/* ยืนยันรหัสผ่าน */}
+          <div>
+            <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>
+              ยืนยันรหัสผ่าน <span style={{ color: '#e63946' }}>*</span>
+            </label>
+            <input
+              type="password"
+              required
+              placeholder="กรอกรหัสผ่านอีกครั้ง"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              style={{ width: '100%', padding: '11px 14px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div style={{ gridColumn: 'span 2', marginTop: '8px' }}>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '8px',
+                backgroundColor: '#1b4332',
+                color: '#ffffff',
+                border: 'none',
+                fontSize: '15px',
+                fontWeight: '700',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1,
+                boxShadow: '0 4px 12px rgba(27,67,50,0.2)'
+              }}
+            >
+              {loading ? '⚡ กำลังบันทึกข้อมูล...' : 'ยืนยันการลงทะเบียน'}
+            </button>
+          </div>
+        </form>
+
+        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px', color: '#6c757d' }}>
+          มีบัญชีผู้ใช้อยู่แล้ว?{' '}
+          <Link href="/login" style={{ color: '#1b4332', fontWeight: '700', textDecoration: 'none' }}>
+            เข้าสู่ระบบที่นี่
+          </Link>
+        </div>
+
+      </div>
+    </div>
+  );
+}
