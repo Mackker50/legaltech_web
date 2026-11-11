@@ -9,12 +9,8 @@ function readUsers() {
     if (!fs.existsSync(filePath)) return [];
     const content = fs.readFileSync(filePath, 'utf8');
     const parsed = JSON.parse(content || '[]');
-
-    // รองรับทั้งแบบ Array ตรงๆ [ {...} ] หรือครอบด้วย Object { users: [ {...} ] }
     if (Array.isArray(parsed)) return parsed;
     if (parsed.users && Array.isArray(parsed.users)) return parsed.users;
-    if (parsed.data && Array.isArray(parsed.data)) return parsed.data;
-
     return [];
   } catch (err) {
     console.error('Error reading users.json:', err);
@@ -35,7 +31,7 @@ function writeUsers(users) {
 export async function GET() {
   try {
     const users = readUsers();
-    const currentUser = users.find((u) => u.isLoggedIn) || null;
+    const currentUser = users.find((u) => u.isLoggedIn) || users[0] || null;
     return NextResponse.json({ success: true, users, currentUser });
   } catch (error) {
     return NextResponse.json({ success: false, message: 'อ่านข้อมูลไม่สำเร็จ' }, { status: 500 });
@@ -47,53 +43,46 @@ export async function POST(request) {
     const body = await request.json();
     let users = readUsers();
 
-    // 1. จัดการการ Logout
+    if (!Array.isArray(users) || users.length === 0) {
+      return NextResponse.json({ success: false, message: 'ไม่พบข้อมูลใน data/users.json' }, { status: 404 });
+    }
+
     if (body.action === 'logout') {
       users = users.map((u) => ({ ...u, isLoggedIn: false }));
       writeUsers(users);
       return NextResponse.json({ success: true, message: 'ออกจากระบบสำเร็จ' });
     }
 
-    const inputEmail = (body.email || '').trim().toLowerCase();
+    let userIndex = users.findIndex(
+      (u) => (body.id && u.id === body.id) || 
+             (body.originalEmail && u.email?.toLowerCase() === body.originalEmail?.toLowerCase()) || 
+             (body.email && u.email?.toLowerCase() === body.email?.toLowerCase())
+    );
 
-    // 2. ค้นหาผู้ใช้แบบยืดหยุ่น (ตรวจทั้ง email, userEmail, mail หรือ username)
-    let userIndex = users.findIndex((u) => {
-      const emailCandidate = (u.email || u.userEmail || u.mail || u.username || '').trim().toLowerCase();
-      return emailCandidate === inputEmail;
-    });
-
-    // 3. กรณีไม่พบอีเมลเลย: ถ้าใน users.json มีข้อมูลอยู่แล้ว ให้เข้าสู่ระบบในฐานะคนแรก พร้อมอัปเดตอีเมลให้อัตโนมัติทันที
     if (userIndex === -1) {
-      if (users.length > 0) {
-        userIndex = 0; // เลือกโปรไฟล์แรกที่มีอยู่จริงใน users.json
-        users[0].email = inputEmail; // ผูกอีเมลนี้เข้ากับโปรไฟล์เพื่อไม่ให้เกิด error อีก
-      } else {
-        // หาก users.json ว่างเปล่าจริงๆ ให้สร้างข้อมูลของคุณเข้าไปใหม่
-        const newUser = {
-          id: 'usr-001',
-          name: 'ฐิติพงศ์ ลีลาจิรวัฒน์',
-          email: inputEmail,
-          role: 'ผู้ส่งออกสินค้าเกษตร (Exporter)',
-          avatar: '',
-          isLoggedIn: true
-        };
-        users.push(newUser);
-        writeUsers(users);
-        return NextResponse.json({ success: true, user: newUser });
-      }
+      userIndex = users.findIndex((u) => u.isLoggedIn);
+      if (userIndex === -1) userIndex = 0;
     }
 
-    // 4. สลับสถานะให้ Active คนเดียว
-    users = users.map((u, idx) => ({
-      ...u,
-      isLoggedIn: idx === userIndex
-    }));
+    // อัปเดตข้อมูลทุกฟิลด์รวมถึง Address
+    users[userIndex] = {
+      ...users[userIndex],
+      name: body.name !== undefined ? body.name : users[userIndex].name,
+      email: body.email !== undefined ? body.email : users[userIndex].email,
+      phone: body.phone !== undefined ? body.phone : users[userIndex].phone,
+      company: body.company !== undefined ? body.company : users[userIndex].company,
+      taxId: body.taxId !== undefined ? body.taxId : users[userIndex].taxId,
+      address: body.address !== undefined ? body.address : users[userIndex].address,
+      role: body.role !== undefined ? body.role : users[userIndex].role,
+      avatar: body.avatar !== undefined ? body.avatar : users[userIndex].avatar,
+      isLoggedIn: body.isLoggedIn !== undefined ? body.isLoggedIn : users[userIndex].isLoggedIn ?? true
+    };
 
-    // 5. บันทึกข้อมูลกลับลง users.json
     writeUsers(users);
 
     return NextResponse.json({
       success: true,
+      message: 'บันทึกข้อมูลเรียบร้อยแล้ว',
       user: users[userIndex]
     });
   } catch (error) {

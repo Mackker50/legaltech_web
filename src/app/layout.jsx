@@ -70,11 +70,24 @@ function Navbar() {
         </Link>
 
         <nav style={{ display: 'flex', gap: '22px', fontSize: '14px', fontWeight: '600' }}>
-          <Link href="/" style={{ color: pathname === '/' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>หน้าหลัก</Link>
-          <Link href="/workspace" style={{ color: pathname === '/workspace' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>Workspace ดีล</Link>
-          <Link href="/status" style={{ color: pathname === '/status' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>ประวัติการทำธุรกรรม</Link>
-          <Link href="/documents" style={{ color: pathname === '/documents' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>คลังเอกสาร</Link>
-          <Link href="/ai-legal" style={{ color: pathname === '/ai-legal' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>AI Legal Specialist</Link>
+          <Link href="/" style={{ color: pathname === '/' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>
+            หน้าหลัก
+          </Link>
+          <Link href="/workspace" style={{ color: pathname === '/workspace' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>
+            Workspace ดีล
+          </Link>
+          <Link href="/status" style={{ color: pathname === '/status' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>
+            ประวัติการทำธุรกรรม
+          </Link>
+          <Link href="/documents" style={{ color: pathname === '/documents' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>
+            คลังเอกสาร
+          </Link>
+          <Link href="/auto-fill" style={{ color: pathname === '/auto-fill' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>
+            ⚡ Auto-Fill
+          </Link>
+          <Link href="/ai-legal" style={{ color: pathname === '/ai-legal' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>
+            AI Legal Specialist
+          </Link>
         </nav>
       </div>
 

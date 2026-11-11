@@ -9,6 +9,7 @@ import { useAppContext } from '@/context/AppContext';
 export default function TransactionStatusPage() {
   const context = useAppContext() || {};
 
+  // กำหนดให้เริ่มต้นที่ Step 1 เสมอ
   const [currentStep, setCurrentStep] = useState(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -112,7 +113,6 @@ export default function TransactionStatusPage() {
   ];
 
   const destinationOptions = [
-    'จีน (ท่าเรือ Shanghai / Guangzhou)',
     'ญี่ปุ่น (ท่าเรือ Tokyo / Yokohama)',
     'เกาหลีใต้ (ท่าเรือ Busan)',
     'เวียดนาม (ด่านเส้นทางบก / ท่าเรือ)',
@@ -143,6 +143,15 @@ export default function TransactionStatusPage() {
     companyName: ''
   });
 
+  // Helper แปลงรูปแบบวันที่ให้ปลอดภัยสำหรับ input type="date"
+  const formatDateForInput = (val) => {
+    if (!val || typeof val !== 'string') return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+    const parsed = new Date(val);
+    if (isNaN(parsed.getTime())) return '';
+    return parsed.toISOString().split('T')[0];
+  };
+
   useEffect(() => {
     fetchDealData();
   }, []);
@@ -154,8 +163,20 @@ export default function TransactionStatusPage() {
       if (data.success && data.deals && data.deals.length > 0) {
         const latestDeal = data.deals[data.deals.length - 1];
         if (latestDeal && latestDeal.productName) {
-          setDealData(latestDeal);
-          if (latestDeal.currentStep) setCurrentStep(latestDeal.currentStep);
+          setDealData(prev => ({
+            ...prev,
+            ...latestDeal,
+            dealId: latestDeal.dealId || prev.dealId,
+            productName: latestDeal.productName || '',
+            destination: latestDeal.destination || '',
+            buyer: latestDeal.buyer || '',
+            quantity: latestDeal.quantity || '',
+            incoterm: latestDeal.incoterm || '',
+            incotermCode: latestDeal.incotermCode || '',
+            deliveryTarget: latestDeal.deliveryTarget || '',
+            price: latestDeal.price || '',
+            companyName: latestDeal.companyName || ''
+          }));
           if (latestDeal.documents) setDocuments(latestDeal.documents);
           if (latestDeal.auditTimeline) setAuditTimeline(latestDeal.auditTimeline);
           if (latestDeal.shippingTimeline) setShippingTimeline(latestDeal.shippingTimeline);
@@ -163,6 +184,9 @@ export default function TransactionStatusPage() {
       }
     } catch (err) {
       console.error('Error loading deal:', err);
+    } finally {
+      // บังคับให้เป็น Step 1 เสมอทุกครั้งที่เปิดหน้านี้
+      setCurrentStep(1);
     }
   };
 
@@ -170,7 +194,8 @@ export default function TransactionStatusPage() {
     updatedData = dealData, 
     updatedDocs = documents, 
     updatedAudit = auditTimeline,
-    updatedShipping = shippingTimeline
+    updatedShipping = shippingTimeline,
+    stepToSave = currentStep
   ) => {
     setLoading(true);
     setStatusMsg(null);
@@ -184,20 +209,20 @@ export default function TransactionStatusPage() {
           documents: updatedDocs, 
           auditTimeline: updatedAudit, 
           shippingTimeline: updatedShipping,
-          currentStep 
+          currentStep: stepToSave
         }),
       });
 
       const data = await res.json();
-      if (data.success) {
-        setDealData(data.deal);
+      if (data.success && data.deal) {
+        setDealData(prev => ({ ...prev, ...data.deal }));
         if (data.deal.documents) setDocuments(data.deal.documents);
         if (data.deal.auditTimeline) setAuditTimeline(data.deal.auditTimeline);
         if (data.deal.shippingTimeline) setShippingTimeline(data.deal.shippingTimeline);
         setStatusMsg({ type: 'success', text: 'บันทึกข้อมูลเรียบร้อยแล้ว' });
         setIsFormOpen(false);
       } else {
-        setStatusMsg({ type: 'error', text: data.message || 'บันทึกไม่สำเร็จ' });
+        setStatusMsg({ type: 'error', text: data?.message || 'บันทึกไม่สำเร็จ' });
       }
     } catch (err) {
       setStatusMsg({ type: 'error', text: 'ไม่สามารถเชื่อมต่อระบบได้' });
@@ -208,7 +233,7 @@ export default function TransactionStatusPage() {
 
   // ฟังก์ชันอัปโหลดไฟล์จริง
   const handleFileUpload = (docId, event) => {
-    const file = event.target.files[0];
+    const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
@@ -221,7 +246,7 @@ export default function TransactionStatusPage() {
         return doc;
       });
       setDocuments(updatedDocs);
-      handleSaveDeal(dealData, updatedDocs, auditTimeline, shippingTimeline);
+      handleSaveDeal(dealData, updatedDocs, auditTimeline, shippingTimeline, currentStep);
     };
     reader.readAsDataURL(file);
   };
@@ -229,6 +254,7 @@ export default function TransactionStatusPage() {
   // พิมพ์สัญญา
   const handlePrintDocument = (title) => {
     const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
     printWindow.document.write(`
       <html>
         <head>
@@ -277,7 +303,6 @@ export default function TransactionStatusPage() {
     printWindow.print();
   };
 
-  // Helper ดึงสไตล์ของจุดและข้อความ Timeline ตามสถานะ
   const getTimelineStatusStyle = (status) => {
     switch (status) {
       case 'success':
@@ -362,7 +387,7 @@ export default function TransactionStatusPage() {
           </div>
         )}
 
-        {/* ฟอร์มลิ้นชักจิ้มเลือกสำหรับเกษตรกร */}
+        {/* ฟอร์มเลือกข้อมูล */}
         {isFormOpen && (
           <form onSubmit={(e) => { e.preventDefault(); handleSaveDeal(); }} style={{ backgroundColor: '#ffffff', padding: '28px', borderRadius: '14px', border: '2px solid #1b4332', marginBottom: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '18px', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
             <h3 style={{ gridColumn: 'span 3', fontSize: '18px', color: '#1b4332', fontWeight: '800', margin: '0 0 6px 0', borderBottom: '2px solid #e9c46a', paddingBottom: '8px' }}>
@@ -371,7 +396,7 @@ export default function TransactionStatusPage() {
 
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>1. เลือกประเภทสินค้าเกษตร <span style={{ color: '#e63946' }}>*</span></label>
-              <select required value={dealData.productName} onChange={(e) => setDealData({ ...dealData, productName: e.target.value })} style={{ width: '100%', padding: '11px', borderRadius: '8px', border: '1.5px solid #1b4332', fontSize: '14px', backgroundColor: '#f4f9f5', cursor: 'pointer', fontWeight: '600' }}>
+              <select required value={dealData.productName || ''} onChange={(e) => setDealData({ ...dealData, productName: e.target.value })} style={{ width: '100%', padding: '11px', borderRadius: '8px', border: '1.5px solid #1b4332', fontSize: '14px', backgroundColor: '#f4f9f5', cursor: 'pointer', fontWeight: '600' }}>
                 <option value="">-- คลิกเพื่อเลือกสินค้า --</option>
                 {productOptions.map((item, idx) => (<option key={idx} value={item}>📦 {item}</option>))}
               </select>
@@ -379,7 +404,7 @@ export default function TransactionStatusPage() {
 
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>2. เลือกประเทศปลายทางที่จะส่ง <span style={{ color: '#e63946' }}>*</span></label>
-              <select required value={dealData.destination} onChange={(e) => setDealData({ ...dealData, destination: e.target.value })} style={{ width: '100%', padding: '11px', borderRadius: '8px', border: '1.5px solid #1b4332', fontSize: '14px', backgroundColor: '#f4f9f5', cursor: 'pointer', fontWeight: '600' }}>
+              <select required value={dealData.destination || ''} onChange={(e) => setDealData({ ...dealData, destination: e.target.value })} style={{ width: '100%', padding: '11px', borderRadius: '8px', border: '1.5px solid #1b4332', fontSize: '14px', backgroundColor: '#f4f9f5', cursor: 'pointer', fontWeight: '600' }}>
                 <option value="">-- คลิกเพื่อเลือกประเทศ --</option>
                 {destinationOptions.map((item, idx) => (<option key={idx} value={item}>✈️ {item}</option>))}
               </select>
@@ -387,7 +412,7 @@ export default function TransactionStatusPage() {
 
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>3. เลือกเงื่อนไขส่งมอบ (Incoterms)</label>
-              <select value={dealData.incotermCode} onChange={(e) => setDealData({ ...dealData, incotermCode: e.target.value, incoterm: `${e.target.value}` })} style={{ width: '100%', padding: '11px', borderRadius: '8px', border: '1.5px solid #1b4332', fontSize: '14px', backgroundColor: '#f4f9f5', cursor: 'pointer', fontWeight: '600' }}>
+              <select value={dealData.incotermCode || ''} onChange={(e) => setDealData({ ...dealData, incotermCode: e.target.value, incoterm: `${e.target.value}` })} style={{ width: '100%', padding: '11px', borderRadius: '8px', border: '1.5px solid #1b4332', fontSize: '14px', backgroundColor: '#f4f9f5', cursor: 'pointer', fontWeight: '600' }}>
                 <option value="">-- คลิกเพื่อเลือกเงื่อนไข --</option>
                 {incotermsList.map(item => (<option key={item.code} value={item.code}>{item.code} - {item.name}</option>))}
               </select>
@@ -395,27 +420,27 @@ export default function TransactionStatusPage() {
 
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>ชื่อกลุ่มเกษตรกร / บริษัทผู้ส่งออก <span style={{ color: '#e63946' }}>*</span></label>
-              <input type="text" required placeholder="เช่น กลุ่มเกษตรกรสวนทุเรียน หรือ ชื่อบริษัท" value={dealData.companyName} onChange={(e) => setDealData({ ...dealData, companyName: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', boxSizing: 'border-box' }} />
+              <input type="text" required placeholder="เช่น กลุ่มเกษตรกรสวนทุเรียน หรือ ชื่อบริษัท" value={dealData.companyName || ''} onChange={(e) => setDealData({ ...dealData, companyName: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
 
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>ชื่อบริษัทผู้ซื้อปลายทาง (Buyer)</label>
-              <input type="text" placeholder="เช่น Shanghai Fresh Import Co." value={dealData.buyer} onChange={(e) => setDealData({ ...dealData, buyer: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', boxSizing: 'border-box' }} />
+              <input type="text" placeholder="เช่น Shanghai Fresh Import Co." value={dealData.buyer || ''} onChange={(e) => setDealData({ ...dealData, buyer: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
 
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>ปริมาณสินค้าทั้งหมด</label>
-              <input type="text" placeholder="เช่น 25,000 กิโลกรัม (1 ตู้เย็น)" value={dealData.quantity} onChange={(e) => setDealData({ ...dealData, quantity: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', boxSizing: 'border-box' }} />
+              <input type="text" placeholder="เช่น 25,000 กิโลกรัม (1 ตู้เย็น)" value={dealData.quantity || ''} onChange={(e) => setDealData({ ...dealData, quantity: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
 
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>ราคารวมธุรกรรม (บาท)</label>
-              <input type="text" placeholder="เช่น 4,500,000 บาท" value={dealData.price} onChange={(e) => setDealData({ ...dealData, price: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', boxSizing: 'border-box' }} />
+              <input type="text" placeholder="เช่น 4,500,000 บาท" value={dealData.price || ''} onChange={(e) => setDealData({ ...dealData, price: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
 
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#1b4332', marginBottom: '6px' }}>กำหนดวันที่ส่งมอบ</label>
-              <input type="date" value={dealData.deliveryTarget} onChange={(e) => setDealData({ ...dealData, deliveryTarget: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#fff' }} />
+              <input type="date" value={formatDateForInput(dealData.deliveryTarget)} onChange={(e) => setDealData({ ...dealData, deliveryTarget: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ced4da', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#fff' }} />
             </div>
 
             <div style={{ gridColumn: 'span 3', textAlign: 'right', marginTop: '10px' }}>
@@ -629,7 +654,7 @@ export default function TransactionStatusPage() {
               </div>
             )}
 
-            {/* STEP 3: Timeline แสดงสถานะตรวจเอกสาร */}
+            {/* STEP 3 */}
             {currentStep === 3 && (
               <div>
                 <div style={{ borderBottom: '2px solid #e9c46a', paddingBottom: '8px', marginBottom: '20px' }}>
@@ -728,7 +753,7 @@ export default function TransactionStatusPage() {
               </div>
             )}
 
-            {/* STEP 4: Timeline แสดงสถานะการขนส่งทางทะเล (Shipping Timeline) */}
+            {/* STEP 4 */}
             {currentStep === 4 && (
               <div>
                 <div style={{ borderBottom: '2px solid #e9c46a', paddingBottom: '8px', marginBottom: '20px' }}>
@@ -740,7 +765,6 @@ export default function TransactionStatusPage() {
                   </p>
                 </div>
 
-                {/* Legend สัญลักษณ์สี */}
                 <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', backgroundColor: '#f8f9fa', padding: '10px 16px', borderRadius: '8px', border: '1px solid #e9ecef', fontSize: '12.5px', fontWeight: '600' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#2d6a4f' }}>
                     <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#2d6a4f' }}></span> 🟢 สีเขียว: ดำเนินการสำเร็จ
@@ -753,10 +777,7 @@ export default function TransactionStatusPage() {
                   </span>
                 </div>
 
-                {/* Vertical Timeline Container */}
                 <div style={{ position: 'relative', paddingLeft: '28px', marginTop: '10px' }}>
-                  
-                  {/* เส้นแกนแนวตั้งลากยาว */}
                   <div style={{ position: 'absolute', top: '12px', bottom: '24px', left: '13px', width: '3px', backgroundColor: '#e9ecef', zIndex: 1 }}></div>
 
                   {shippingTimeline.map((item, index) => {
@@ -766,7 +787,6 @@ export default function TransactionStatusPage() {
                     return (
                       <div key={item.id} style={{ position: 'relative', marginBottom: isLast ? 0 : '28px', zIndex: 2 }}>
                         
-                        {/* จุดวงกลมแสดงสถานะบนเส้นแกน */}
                         <div style={{
                           position: 'absolute',
                           left: '-28px',
@@ -787,7 +807,6 @@ export default function TransactionStatusPage() {
                           {style.icon}
                         </div>
 
-                        {/* กล่องเนื้อหาแสดงรายละเอียดการขนส่ง */}
                         <div style={{
                           backgroundColor: '#ffffff',
                           borderRadius: '10px',
@@ -805,7 +824,6 @@ export default function TransactionStatusPage() {
                               </h4>
                             </div>
 
-                            {/* Badge สถานะสี */}
                             <span style={{
                               padding: '4px 12px',
                               borderRadius: '20px',
@@ -831,7 +849,6 @@ export default function TransactionStatusPage() {
                       </div>
                     );
                   })}
-
                 </div>
               </div>
             )}
@@ -858,8 +875,9 @@ export default function TransactionStatusPage() {
               <button
                 disabled={currentStep === 5}
                 onClick={() => {
-                  setCurrentStep(prev => prev + 1);
-                  handleSaveDeal();
+                  const nextStep = currentStep + 1;
+                  setCurrentStep(nextStep);
+                  handleSaveDeal(dealData, documents, auditTimeline, shippingTimeline, nextStep);
                 }}
                 style={{ padding: '9px 24px', borderRadius: '6px', border: 'none', backgroundColor: '#1b4332', color: '#ffffff', fontWeight: '700', cursor: currentStep === 5 ? 'not-allowed' : 'pointer', opacity: currentStep === 5 ? 0.4 : 1, fontSize: '13px' }}
               >

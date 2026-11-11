@@ -1,17 +1,20 @@
 [
   {
     "dealId": "EXP-2026-001",
-    "productName": "ทุเรียนแช่แข็ง",
+    "productName": "มะม่วงน้ำดอกไม้สด",
     "destination": "ญี่ปุ่น (ท่าเรือ Tokyo / Yokohama)",
     "buyer": "s",
     "quantity": "223456",
     "incoterm": "FCA",
-    "incotermCode": "FCA",
+    "incotermCode": "FOB",
     "deliveryTarget": "-",
     "price": "5700000000",
     "companyName": "a",
-    "currentStep": 4,
+    "currentStep": 1,
     "createdAt": "2026-11-11T11:58:01.996Z",
-    "updatedAt": "2026-11-11T12:06:14.538Z"
+    "updatedAt": "2026-11-11T12:06:14.538Z",
+    "documents": [],
+    "auditTimeline": [],
+    "shippingTimeline": []
   }
 ]
