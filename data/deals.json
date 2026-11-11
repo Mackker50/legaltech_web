@@ -10,11 +10,13 @@
     "deliveryTarget": "-",
     "price": "5700000000",
     "companyName": "a",
-    "currentStep": 1,
+    "currentStep": 3,
     "createdAt": "2026-11-11T11:58:01.996Z",
     "updatedAt": "2026-11-11T12:06:14.538Z",
     "documents": [],
     "auditTimeline": [],
-    "shippingTimeline": []
+    "shippingTimeline": [],
+    "intermediaryName": "บริษัท ไทย อกริ โลจิสติกส์ อินเตอร์เนชั่นแนล จำกัด",
+    "contractRelationType": "MULTIPARTY"
   }
 ]

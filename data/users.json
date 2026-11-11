@@ -27,5 +27,17 @@
     "password": "$2a$10$Ggh/d6COUOStgU.OY7k4oOJLF.DujJobVdtnFwI6gW7v1Xgs5lHmm",
     "role": "EXPORTER",
     "createdAt": "2026-11-11T14:11:02.172Z"
+  },
+  {
+    "id": "user-1794408663474",
+    "name": "สมชาย",
+    "email": "as12@gmail.com",
+    "phone": "000000000",
+    "company": "",
+    "taxId": "00000000000000",
+    "address": "000000000",
+    "role": "EXPORTER",
+    "avatar": "",
+    "isLoggedIn": true
   }
 ]

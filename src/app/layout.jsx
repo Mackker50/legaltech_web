@@ -65,29 +65,15 @@ function Navbar() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '22px' }}>🌱</span>
-          <span style={{ fontSize: '19px', fontWeight: '800', color: '#1b4332' }}>AgriLegal</span>
-          <span style={{ fontSize: '10px', fontWeight: '800', backgroundColor: '#e9f5ed', color: '#1b4332', padding: '2px 6px', borderRadius: '4px' }}>PRO</span>
+          <span style={{ fontSize: '19px', fontWeight: '800', color: '#1b4332' }}>ExportSure</span>
         </Link>
 
         <nav style={{ display: 'flex', gap: '22px', fontSize: '14px', fontWeight: '600' }}>
-          <Link href="/" style={{ color: pathname === '/' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>
-            หน้าหลัก
-          </Link>
-          <Link href="/workspace" style={{ color: pathname === '/workspace' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>
-            Workspace ดีล
-          </Link>
-          <Link href="/status" style={{ color: pathname === '/status' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>
-            ประวัติการทำธุรกรรม
-          </Link>
-          <Link href="/documents" style={{ color: pathname === '/documents' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>
-            คลังเอกสาร
-          </Link>
-          <Link href="/auto-fill" style={{ color: pathname === '/auto-fill' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>
-            ⚡ Auto-Fill
-          </Link>
-          <Link href="/ai-legal" style={{ color: pathname === '/ai-legal' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>
-            AI Legal Specialist
-          </Link>
+          <Link href="/" style={{ color: pathname === '/' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>หน้าหลัก</Link>
+          <Link href="/workspace" style={{ color: pathname === '/workspace' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>Workspace</Link>
+          <Link href="/status" style={{ color: pathname === '/status' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>ประวัติการทำธุรกรรม</Link>
+          <Link href="/documents" style={{ color: pathname === '/documents' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>คลังเอกสาร</Link>
+          <Link href="/ai-legal" style={{ color: pathname === '/ai-legal' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>AI Legal Specialist</Link>
         </nav>
       </div>
 

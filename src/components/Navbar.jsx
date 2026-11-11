@@ -53,10 +53,10 @@ export default function Navbar() {
 
         <nav style={{ display: 'flex', gap: '24px', fontSize: '14px', fontWeight: '600' }}>
           <Link href="/" style={{ color: '#1b4332', textDecoration: 'none' }}>หน้าหลัก</Link>
-          <Link href="/workspace" style={{ color: '#64748b', textDecoration: 'none' }}>Workspace ดีล</Link>
+          <Link href="/workspace" style={{ color: '#64748b', textDecoration: 'none' }}>Workspace </Link>
           <Link href="/status" style={{ color: '#64748b', textDecoration: 'none' }}>ประวัติการทำธุรกรรม</Link>
           <Link href="/documents" style={{ color: '#64748b', textDecoration: 'none' }}>คลังเอกสาร</Link>
-          <Link href="/ai-legal" style={{ color: '#64748b', textDecoration: 'none' }}>AI Legal Specialist</Link>
+          <Link href="/ai-legal" style={{ color: '#64748b', textDecoration: 'none' }}>AI Legal </Link>
         </nav>
       </div>
 
