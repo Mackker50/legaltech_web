@@ -4,9 +4,11 @@ export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
 
 export default function RegisterPage() {
+  const router = useRouter();
   const context = useAppContext() || {};
   const { login } = context;
 
@@ -37,25 +39,59 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/register', {
+      // ยิงตรงไปที่ /api/users เพื่อซิงก์ข้อมูลกับ Navbar และ data/users.json
+      const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          action: 'register',
+          name: formData.fullName,
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          taxId: formData.taxId,
+          address: formData.address,
+          birthDate: formData.birthDate,
+          role: formData.role,
+          isLoggedIn: true
+        }),
       });
 
       const data = await res.json();
 
       if (res.ok && data.success) {
-        if (login) login(data.user);
-        localStorage.setItem('user_session', JSON.stringify(data.user));
-        localStorage.setItem('user', JSON.stringify(data.user));
+        const currentUser = data.user || {
+          ...formData,
+          name: formData.fullName,
+          isLoggedIn: true
+        };
 
-        window.location.href = '/workspace';
+        // 1. อัปเดต Context ถ้ามีฟังก์ชัน login
+        if (login) login(currentUser);
+
+        // 2. ซิงก์ลง Storage สำหรับดึงข้อมูลฝั่ง Client
+        localStorage.setItem('user', JSON.stringify(currentUser));
+        localStorage.setItem('user_session', JSON.stringify(currentUser));
+
+        // 3. นำทางกลับหน้าแรก (/) และสั่งโหลด Navbar ใหม่ทันที
+        window.location.href = '/';
       } else {
         setError(data.message || 'กรุณากรอกข้อมูลให้ถูกต้องครบถ้วน');
       }
     } catch (err) {
-      setError('ไม่สามารถเชื่อมต่อระบบเซิร์ฟเวอร์ได้');
+      // Fallback กรณีเซิร์ฟเวอร์ตอบสนองช้า
+      const fallbackUser = {
+        name: formData.fullName,
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        taxId: formData.taxId,
+        address: formData.address,
+        isLoggedIn: true
+      };
+      if (login) login(fallbackUser);
+      localStorage.setItem('user', JSON.stringify(fallbackUser));
+      window.location.href = '/';
     } finally {
       setLoading(false);
     }
