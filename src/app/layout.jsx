@@ -1,258 +1,197 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { AppProvider } from '@/context/AppContext';
 
-export default function RootLayout({ children }) {
-  // 1. กำหนดค่าเริ่มต้นเป็น false เพื่อไม่ให้ค้างสถานะล็อกอินไว้เมื่อเข้าเว็บ
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+function Navbar() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [activeUser, setActiveUser] = useState(null);
 
-  // 2. ข้อมูลโปรไฟล์ผู้ใช้งานเมื่อล็อกอินสำเร็จ
-  const [userProfile, setUserProfile] = useState({
-    name: 'ฐิติพงศ์ ลีลาจิรวัฒน์',
-    role: 'ผู้ส่งออก (Exporter)',
-    email: 'thitipong@agrilegal.co.th',
-    taxId: '0105561000000',
-  });
+  useEffect(() => {
+    fetchActiveUser();
+  }, [pathname]);
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setShowProfileMenu(false);
-    setIsMobileMenuOpen(false);
+  const fetchActiveUser = async () => {
+    try {
+      const res = await fetch('/api/users', { cache: 'no-store' });
+      const data = await res.json();
+      if (data.success && data.currentUser) {
+        setActiveUser(data.currentUser);
+      } else {
+        setActiveUser(null);
+      }
+    } catch (e) {
+      console.error('Error fetching user:', e);
+    }
   };
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout' }),
+      });
+      setActiveUser(null);
+      localStorage.removeItem('user');
+      router.push('/');
+      router.refresh();
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+  };
+
+  // ดึงชื่อ-นามสกุลจริงมาแสดงผล
+  const displayName = activeUser?.name || activeUser?.fullName || 'ฐิติพงศ์ ลีลาจิรวัฒน์';
+
+  return (
+    <header style={{
+      backgroundColor: '#ffffff',
+      borderBottom: '1px solid #e2e8f0',
+      padding: '0 36px',
+      height: '68px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      position: 'sticky',
+      top: 0,
+      zIndex: 100,
+      fontFamily: "'Prompt', sans-serif"
+    }}>
+      {/* Brand & Main Navigation */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '22px' }}>🌱</span>
+          <span style={{ fontSize: '19px', fontWeight: '800', color: '#1b4332' }}>AgriLegal</span>
+          <span style={{ fontSize: '10px', fontWeight: '800', backgroundColor: '#e9f5ed', color: '#1b4332', padding: '2px 6px', borderRadius: '4px' }}>PRO</span>
+        </Link>
+
+        <nav style={{ display: 'flex', gap: '22px', fontSize: '14px', fontWeight: '600' }}>
+          <Link href="/" style={{ color: pathname === '/' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>หน้าหลัก</Link>
+          <Link href="/workspace" style={{ color: pathname === '/workspace' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>Workspace ดีล</Link>
+          <Link href="/status" style={{ color: pathname === '/status' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>ประวัติการทำธุรกรรม</Link>
+          <Link href="/documents" style={{ color: pathname === '/documents' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>คลังเอกสาร</Link>
+          <Link href="/ai-legal" style={{ color: pathname === '/ai-legal' ? '#1b4332' : '#64748b', textDecoration: 'none' }}>AI Legal Specialist</Link>
+        </nav>
+      </div>
+
+      {/* สลับระหว่าง ปุ่มเข้าสู่ระบบ กับ โปรไฟล์ชื่อ-นามสกุลจริง */}
+      <div>
+        {activeUser && activeUser.isLoggedIn ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Link
+              href="/profile"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                textDecoration: 'none',
+                backgroundColor: '#f4f9f5',
+                padding: '5px 16px 5px 6px',
+                borderRadius: '9999px',
+                border: '1.5px solid #b7e4c7',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {activeUser.avatar ? (
+                <img
+                  src={activeUser.avatar}
+                  alt="Profile Avatar"
+                  style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid #1b4332' }}
+                />
+              ) : (
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: '#1b4332',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '13px',
+                  fontWeight: '800'
+                }}>
+                  {displayName.charAt(0)}
+                </div>
+              )}
+
+              {/* แสดงชื่อ-นามสกุลที่ผูกกับอีเมล */}
+              <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#1b4332' }}>
+                {displayName}
+              </span>
+            </Link>
+
+            <button
+              onClick={handleLogout}
+              style={{
+                padding: '7px 14px',
+                backgroundColor: '#fff0f0',
+                color: '#e63946',
+                border: '1px solid #ffcdd2',
+                borderRadius: '8px',
+                fontWeight: '700',
+                fontSize: '12.5px',
+                cursor: 'pointer'
+              }}
+            >
+              ออกจากระบบ
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <Link
+              href="/login"
+              style={{
+                padding: '8px 18px',
+                backgroundColor: '#1b4332',
+                color: '#ffffff',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontWeight: '700',
+                fontSize: '13px'
+              }}
+            >
+              เข้าสู่ระบบ
+            </Link>
+            <Link
+              href="/register"
+              style={{
+                padding: '8px 18px',
+                backgroundColor: '#ffffff',
+                color: '#1b4332',
+                border: '1.5px solid #1b4332',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontWeight: '700',
+                fontSize: '13px'
+              }}
+            >
+              ลงทะเบียน
+            </Link>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+}
+
+export default function RootLayout({ children }) {
   return (
     <html lang="th">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-        <style>{`
-          * { box-sizing: border-box; }
-          body { overflow-x: hidden; margin: 0; padding: 0; }
-          
-          .nav-desktop-links {
-            display: flex;
-            gap: 28px;
-            font-size: 14px;
-            align-items: center;
-          }
-
-          .nav-mobile-toggle {
-            display: none;
-          }
-
-          .nav-mobile-menu {
-            display: none;
-          }
-
-          @media (max-width: 900px) {
-            div[style*="gridTemplateColumns"],
-            section[style*="gridTemplateColumns"] {
-              grid-template-columns: 1fr !important;
-            }
-
-            div[style*="justifyContent: 'space-between'"],
-            div[style*="justify-content: space-between"] {
-              flex-direction: column !important;
-              align-items: flex-start !important;
-              gap: 16px !important;
-            }
-
-            h1 { font-size: 28px !important; line-height: 1.25 !important; }
-            h2 { font-size: 20px !important; }
-          }
-
-          @media (max-width: 768px) {
-            .nav-desktop-links { display: none; }
-            .nav-mobile-toggle { display: block; }
-            .nav-container { padding: 0 20px !important; }
-            .main-container { padding: 20px 16px 60px !important; }
-
-            .nav-mobile-menu {
-              display: flex;
-              flex-direction: column;
-              gap: 16px;
-              background-color: rgba(255, 255, 255, 0.98);
-              backdrop-filter: blur(20px);
-              -webkit-backdrop-filter: blur(20px);
-              position: absolute;
-              top: 54px;
-              left: 0;
-              width: 100%;
-              padding: 20px 24px;
-              border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-              box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-            }
-          }
-        `}</style>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </head>
-
-      <body
-        style={{
-          backgroundColor: '#f5f5f7',
-          color: '#1d1d1f',
-          fontFamily:
-            '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif',
-        }}
-      >
-        {/* Full-width Apple Glassmorphism Navbar */}
-        <nav
-          className="nav-container"
-          style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 9999,
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
-            padding: '0 32px',
-            height: '54px',
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          {/* 1. Left: Brand Logo */}
-          <div style={{ flex: '0 0 auto', marginRight: '32px' }}>
-            <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '18px', fontWeight: '600', color: '#1d1d1f', letterSpacing: '-0.02em' }}>
-                🌾 AgriLegal
-              </span>
-              <span style={{ fontSize: '10px', fontWeight: '600', color: '#86868b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                PRO
-              </span>
-            </Link>
-          </div>
-
-          {/* 2. Center: Desktop Links */}
-          <div className="nav-desktop-links" style={{ flex: 1, justifyContent: 'flex-start' }}>
-            <Link href="/" style={{ color: '#1d1d1f', textDecoration: 'none' }}>หน้าหลัก</Link>
-            <Link href="/workspace" style={{ color: '#424245', textDecoration: 'none' }}>Workspace ดีล</Link>
-            <Link href="/status" style={{ color: '#424245', textDecoration: 'none' }}>สถานะส่งออก</Link>
-            <Link href="/documents" style={{ color: '#424245', textDecoration: 'none' }}>คลังเอกสาร</Link>
-            <Link href="/ai-legal" style={{ color: '#424245', textDecoration: 'none' }}>AI Legal Specialist</Link>
-          </div>
-
-          {/* 3. Right: Auth / Profile Actions (ขวาสุดของจอ) */}
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' }}>
-            {isLoggedIn ? (
-              <div>
-                <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  style={{
-                    backgroundColor: '#e8f2fc',
-                    border: '1px solid rgba(0, 113, 227, 0.2)',
-                    borderRadius: '980px',
-                    padding: '4px 10px 4px 6px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    cursor: 'pointer',
-                    outline: 'none',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '26px',
-                      height: '26px',
-                      borderRadius: '50%',
-                      backgroundColor: '#0071e3',
-                      color: '#ffffff',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justify: 'center',
-                    }}
-                  >
-                    TL
-                  </div>
-                  <span style={{ fontSize: '13px', fontWeight: '500', color: '#1d1d1f' }}>
-                    {userProfile.name.split(' ')[0]}
-                  </span>
-                  <span style={{ fontSize: '10px', color: '#86868b' }}>▼</span>
-                </button>
-
-                {/* Profile Popover Menu */}
-                {showProfileMenu && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      right: 0,
-                      top: '42px',
-                      width: '250px',
-                      backgroundColor: '#ffffff',
-                      borderRadius: '16px',
-                      padding: '16px',
-                      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.12)',
-                      border: '1px solid rgba(0, 0, 0, 0.06)',
-                      display: 'grid',
-                      gap: '10px',
-                      zIndex: 10000,
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#1d1d1f' }}>{userProfile.name}</div>
-                      <div style={{ fontSize: '12px', color: '#0071e3', fontWeight: '500' }}>{userProfile.role}</div>
-                      <div style={{ fontSize: '11px', color: '#86868b', marginTop: '2px' }}>Tax ID: {userProfile.taxId}</div>
-                    </div>
-                    <div style={{ borderTop: '1px solid #f5f5f7', paddingTop: '8px', display: 'grid', gap: '6px' }}>
-                      <button
-                        onClick={handleLogout}
-                        style={{ textAlign: 'left', background: 'none', border: 'none', padding: '6px 0', fontSize: '13px', color: '#d70015', fontWeight: '500', cursor: 'pointer' }}
-                      >
-                        🚪 ออกจากระบบ
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <Link href="/login" style={{ backgroundColor: '#0071e3', color: '#fff', padding: '6px 16px', borderRadius: '980px', fontSize: '13px', textDecoration: 'none' }}>
-                  เข้าสู่ระบบ
-                </Link>
-                <Link href="/register" style={{ backgroundColor: '#e8f2fc', color: '#0071e3', padding: '6px 16px', borderRadius: '980px', fontSize: '13px', textDecoration: 'none', fontWeight: '500' }}>
-                  ลงทะเบียน
-                </Link>
-              </div>
-            )}
-
-            {/* Mobile Hamburger Button */}
-            <button
-              className="nav-mobile-toggle"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '20px',
-                cursor: 'pointer',
-                color: '#1d1d1f',
-                padding: '4px',
-              }}
-            >
-              {isMobileMenuOpen ? '✕' : '☰'}
-            </button>
-          </div>
-
-          {/* Mobile Drawer Menu */}
-          {isMobileMenuOpen && (
-            <div className="nav-mobile-menu">
-              <Link href="/" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#1d1d1f', textDecoration: 'none', fontSize: '15px', fontWeight: '500' }}>หน้าหลัก</Link>
-              <Link href="/workspace" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#1d1d1f', textDecoration: 'none', fontSize: '15px', fontWeight: '500' }}>Workspace ดีล</Link>
-              <Link href="/status" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#1d1d1f', textDecoration: 'none', fontSize: '15px', fontWeight: '500' }}>สถานะส่งออก</Link>
-              <Link href="/documents" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#1d1d1f', textDecoration: 'none', fontSize: '15px', fontWeight: '500' }}>คลังเอกสาร</Link>
-              <Link href="/ai-legal" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#1d1d1f', textDecoration: 'none', fontSize: '15px', fontWeight: '500' }}>AI Legal Specialist</Link>
-            </div>
-          )}
-        </nav>
-
-        {/* Main Content Area */}
-        <main className="main-container" style={{ maxWidth: '1040px', margin: '0 auto', padding: '32px 20px 80px' }}>
-          {children}
-        </main>
+      <body style={{ margin: 0, padding: 0, backgroundColor: '#f8fafc', color: '#1e293b' }}>
+        <AppProvider>
+          <Navbar />
+          <main>{children}</main>
+        </AppProvider>
       </body>
     </html>
   );

@@ -1,22 +1,26 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
 
 export default function Navbar() {
+  const router = useRouter();
   const context = useAppContext() || {};
-  const { lang, setLang, user: contextUser, logout } = context;
+  const { user, logout } = context;
+
   const [currentUser, setCurrentUser] = useState(null);
 
+  // ดึงข้อมูลผู้ใช้จาก Context หรือ LocalStorage
   useEffect(() => {
-    if (contextUser) {
-      setCurrentUser(contextUser);
+    if (user) {
+      setCurrentUser(user);
     } else {
-      const savedUser = localStorage.getItem('user_session') || localStorage.getItem('user');
-      if (savedUser) {
+      const saved = localStorage.getItem('user_session') || localStorage.getItem('user');
+      if (saved) {
         try {
-          setCurrentUser(JSON.parse(savedUser));
+          setCurrentUser(JSON.parse(saved));
         } catch (e) {
           console.error(e);
         }
@@ -24,92 +28,116 @@ export default function Navbar() {
         setCurrentUser(null);
       }
     }
-  }, [contextUser]);
+  }, [user]);
+
+  // ฟังก์ชันออกจากระบบ
+  const handleLogout = () => {
+    if (logout) logout();
+    localStorage.removeItem('user_session');
+    localStorage.removeItem('user');
+    setCurrentUser(null);
+    router.push('/');
+    router.refresh();
+  };
 
   return (
-    <header style={{ width: '100%', fontFamily: "'Prompt', 'Sarabun', sans-serif" }}>
-      {/* Top Bar - สีเขียวเข้มทึบ */}
-      <div style={{ backgroundColor: '#081c15', color: '#ffffff', padding: '6px 32px', fontSize: '12px' }}>
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>🌱 แพลตฟอร์มบริหารจัดการกฎหมายและเอกสารส่งออกสินค้าเกษตร (AgriLegal Pro)</div>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <button
-              onClick={() => setLang && setLang(lang === 'th' ? 'en' : 'th')}
-              style={{ background: 'transparent', border: 'none', color: '#e9c46a', cursor: 'pointer', fontWeight: 'bold' }}
+    <header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '0 32px', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, fontFamily: "'Prompt', sans-serif" }}>
+      
+      {/* Brand Logo & Menu */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '36px' }}>
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '20px' }}>🌱</span>
+          <span style={{ fontSize: '18px', fontWeight: '800', color: '#1b4332' }}>AgriLegal</span>
+          <span style={{ fontSize: '10px', fontWeight: '800', backgroundColor: '#e9f5ed', color: '#1b4332', padding: '2px 6px', borderRadius: '4px' }}>PRO</span>
+        </Link>
+
+        <nav style={{ display: 'flex', gap: '24px', fontSize: '14px', fontWeight: '600' }}>
+          <Link href="/" style={{ color: '#1b4332', textDecoration: 'none' }}>หน้าหลัก</Link>
+          <Link href="/workspace" style={{ color: '#64748b', textDecoration: 'none' }}>Workspace ดีล</Link>
+          <Link href="/status" style={{ color: '#64748b', textDecoration: 'none' }}>ประวัติการทำธุรกรรม</Link>
+          <Link href="/documents" style={{ color: '#64748b', textDecoration: 'none' }}>คลังเอกสาร</Link>
+          <Link href="/ai-legal" style={{ color: '#64748b', textDecoration: 'none' }}>AI Legal Specialist</Link>
+        </nav>
+      </div>
+
+      {/* Auth Zone: สลับระหว่าง Login/Register กับ User Profile */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {currentUser ? (
+          // เมื่อล็อกอินแล้ว -> แสดงโปรไฟล์และปุ่มออกจากระบบ
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <Link
+              href="/profile"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                textDecoration: 'none',
+                backgroundColor: '#f4f9f5',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                border: '1px solid #b7e4c7'
+              }}
             >
-              {lang === 'th' ? 'TH | EN' : 'EN | TH'}
+              <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#1b4332', color: '#e9c46a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>
+                {currentUser.fullName ? currentUser.fullName.charAt(0).toUpperCase() : '👤'}
+              </div>
+              <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#1b4332' }}>
+                {currentUser.fullName || currentUser.name || currentUser.email?.split('@')[0]}
+              </span>
+            </Link>
+
+            <button
+              onClick={handleLogout}
+              style={{
+                padding: '7px 14px',
+                backgroundColor: '#f8fafc',
+                color: '#e63946',
+                border: '1px solid #fee2e2',
+                borderRadius: '8px',
+                fontWeight: '700',
+                fontSize: '12.5px',
+                cursor: 'pointer'
+              }}
+            >
+              ออกจากระบบ
             </button>
           </div>
-        </div>
+        ) : (
+          // เมื่อยังไม่ล็อกอิน -> แสดงปุ่มเข้าสู่ระบบ และ ลงทะเบียน
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Link
+              href="/login"
+              style={{
+                padding: '8px 18px',
+                backgroundColor: '#0071e3',
+                color: '#ffffff',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontWeight: '700',
+                fontSize: '13px'
+              }}
+            >
+              เข้าสู่ระบบ
+            </Link>
+            <Link
+              href="/register"
+              style={{
+                padding: '8px 18px',
+                backgroundColor: '#ffffff',
+                color: '#0071e3',
+                border: '1px solid #0071e3',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontWeight: '700',
+                fontSize: '13px'
+              }}
+            >
+              ลงทะเบียน
+            </Link>
+          </div>
+        )}
       </div>
 
-      {/* Main Header Bar - ขาวเนียน ตัดเส้นเหลืองทอง */}
-      <div style={{ backgroundColor: '#ffffff', borderBottom: '3px solid #e9c46a', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', width: '100%' }}>
-        <div style={{ width: '100%', padding: '12px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxSizing: 'border-box' }}>
-          
-          {/* Logo Brand */}
-          <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '42px', height: '42px', backgroundColor: '#1b4332', borderRadius: '8px', color: '#e9c46a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 'bold' }}>
-              🌾
-            </div>
-            <div>
-              <div style={{ fontSize: '20px', fontWeight: '800', color: '#1b4332', letterSpacing: '-0.5px' }}>AgriLegal Pro</div>
-              <div style={{ fontSize: '10px', color: '#52b788', letterSpacing: '0.5px', fontWeight: '700' }}>EXPORT COMPLIANCE PORTAL</div>
-            </div>
-          </Link>
-
-          {/* Navigation Links ส่วนรวม */}
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-            <Link href="/" style={{ textDecoration: 'none', color: '#1b4332', fontSize: '14px', fontWeight: '600' }}>หน้าหลัก</Link>
-            <Link href="/workspace" style={{ textDecoration: 'none', color: '#1b4332', fontSize: '14px', fontWeight: '600' }}>Workspace ดีล</Link>
-            <Link href="/supply-chain" style={{ textDecoration: 'none', color: '#1b4332', fontSize: '14px', fontWeight: '600' }}>สถานะส่งออก</Link>
-            <Link href="/documents" style={{ textDecoration: 'none', color: '#1b4332', fontSize: '14px', fontWeight: '600' }}>คลังเอกสาร</Link>
-            <Link href="/ai-legal" style={{ textDecoration: 'none', color: '#1b4332', fontSize: '14px', fontWeight: '600' }}>AI Legal Specialist</Link>
-          </div>
-
-          {/* User Auth Buttons */}
-          <div>
-            {currentUser ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                {/* ปุ่มโปรไฟล์ผู้ใช้ คลิกเพื่อเข้า /profile */}
-                <Link href="/profile" style={{ textDecoration: 'none' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '6px', backgroundColor: '#f4f9f5', border: '1px solid #d8f3dc', cursor: 'pointer', transition: 'all 0.2s' }}>
-                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#1b4332', color: '#e9c46a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>
-                      {currentUser.fullName ? currentUser.fullName.charAt(0).toUpperCase() : (currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '👤')}
-                    </div>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1b4332' }}>
-                      {currentUser.fullName || currentUser.name || 'โปรไฟล์'}
-                    </span>
-                  </div>
-                </Link>
-
-                <button
-                  onClick={() => {
-                    localStorage.removeItem('user_session');
-                    localStorage.removeItem('user');
-                    if (logout) logout();
-                    setCurrentUser(null);
-                    window.location.href = '/';
-                  }}
-                  style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#e63946', color: '#fff', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
-                >
-                  ออกจากระบบ
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <Link href="/login" style={{ padding: '8px 18px', borderRadius: '6px', textDecoration: 'none', color: '#1b4332', border: '1.5px solid #1b4332', fontSize: '13px', fontWeight: '700' }}>
-                  เข้าสู่ระบบ
-                </Link>
-                <Link href="/register" style={{ padding: '8px 18px', borderRadius: '6px', textDecoration: 'none', backgroundColor: '#1b4332', color: '#ffffff', fontSize: '13px', fontWeight: '700' }}>
-                  ลงทะเบียน
-                </Link>
-              </div>
-            )}
-          </div>
-
-        </div>
-      </div>
     </header>
   );
 }
