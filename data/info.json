@@ -1,0 +1,323 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
+import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+
+export default function AILegalChatPage() {
+  const [messages, setMessages] = useState([
+    {
+      role: 'assistant',
+      text: 'สวัสดีครับ! ผมคือ **AgriLegal AI Assistant** 🌾⚖️\n\nผู้ช่วยอัจฉริยะด้านกฎหมาย พิธีสารการส่งออกสินค้าเกษตร และการตรวจสอบความเสี่ยงในสัญญาหลายฝ่าย\n\nท่านสามารถสอบถามเรื่องขั้นตอนเอกสาร (พ.ก. 7, Form E, GACC, MAFF, FDA) หรือปรึกษาปัญหาเงื่อนไขสัญญาการค้าได้ทันทีครับ',
+      time: 'เมื่อสักครู่'
+    }
+  ]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [copyStatus, setCopyStatus] = useState(null);
+  const chatEndRef = useRef(null);
+
+  // คำถามแนะนำที่สร้างขึ้นจาก Pain Points และคลังข้อมูลจริง
+  const quickPrompts = [
+    { title: '🇨🇳 ส่งออกทุเรียนสดไปจีน', desc: 'ตรวจเอกสาร GACC, GAP/GMP และตู้ Reefer', prompt: 'ส่งออกทุเรียนสดไปจีน ต้องเตรียมเอกสารและควบคุมอุณหภูมิตู้คอนเทนเนอร์อย่างไร?' },
+    { title: '📜 สัญญาหลายฝ่าย (Multi-party)', desc: 'สัญญาซื้อขาย สัญญาพ่อค้าคนกลาง และสัญญารับขน', prompt: 'การส่งออกที่มีเกษตรกร พ่อค้าคนกลาง และผู้ซื้อปลายทาง มีสัญญาอะไรบ้างที่ต้องระวังข้อมูลตกหล่น?' },
+    { title: '🇯🇵 มะม่วงน้ำดอกไม้ไปญี่ปุ่น', desc: 'มาตรการอบไอน้ำ VHT และเกณฑ์ MAFF', prompt: 'ส่งออกมะม่วงน้ำดอกไม้ไปญี่ปุ่น มีมาตรการอบไอน้ำ VHT และศัตรูพืชอย่างไร?' },
+    { title: '⚖️ ปัญหากฎหมายส่งออกไทย', desc: 'พ.ร.บ. กักพืช, ศุลกากร และ มกอช.', prompt: 'ทำไมผู้ประกอบการและเกษตรกรส่งออกถึงเจอปัญหากฎหมายและเอกสารที่ซับซ้อน?' }
+  ];
+
+  // เลื่อนหน้าจอลงล่างสุดอัตโนมัติเมื่อมีข้อความใหม่
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
+
+  const handleSend = async (customPrompt = null) => {
+    const textToSend = customPrompt || inputMessage;
+    if (!textToSend.trim() || loading) return;
+
+    const currentTime = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+    const userMsg = { role: 'user', text: textToSend, time: currentTime };
+
+    setMessages(prev => [...prev, userMsg]);
+    if (!customPrompt) setInputMessage('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: textToSend })
+      });
+      const data = await res.json();
+      
+      const replyTime = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+      setMessages(prev => [...prev, { role: 'assistant', text: data.reply, time: replyTime }]);
+    } catch (err) {
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', text: '⚠️ ไม่สามารถติดต่อฐานข้อมูลข้อกำหนดกฎหมายได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง', time: currentTime }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text, index) => {
+    navigator.clipboard.writeText(text);
+    setCopyStatus(index);
+    setTimeout(() => setCopyStatus(null), 2000);
+  };
+
+  return (
+    <div style={{ backgroundColor: '#f1f5f9', minHeight: '92vh', padding: '16px', fontFamily: "'Prompt', sans-serif" }}>
+      <div style={{ maxWidth: '1240px', margin: '0 auto', display: 'grid', gridTemplateColumns: '300px 1fr', gap: '16px', height: '88vh' }}>
+
+        {/* ฝั่งซ้าย: Sidebar ข้อมูลบริบทและคำถามยอดนิยม */}
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+          
+          <div style={{ padding: '18px 20px', borderBottom: '1px solid #f1f5f9', backgroundColor: '#1b4332', color: '#ffffff' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '22px' }}>🌱</span>
+              <div>
+                <div style={{ fontWeight: '800', fontSize: '15px' }}>AgriLegal AI</div>
+                <div style={{ fontSize: '11px', color: '#b7e4c7' }}>ระบบที่ปรึกษากฎหมายส่งออก</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            
+            <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              ⚡ หัวข้อคำถามแนะนำ
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {quickPrompts.map((item, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSend(item.prompt)}
+                  disabled={loading}
+                  style={{
+                    textAlign: 'left',
+                    padding: '12px',
+                    borderRadius: '10px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e9f5ed'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                >
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: '#1b4332' }}>{item.title}</div>
+                  <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '2px' }}>{item.desc}</div>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 'auto', backgroundColor: '#fefce8', border: '1px solid #fef08a', borderRadius: '10px', padding: '12px', fontSize: '12px', color: '#854d0e', lineHeight: '1.5' }}>
+              <strong>💡 ฐานข้อมูลอ้างอิง:</strong> เชื่อมต่อตรงกับ <code>data/info.json</code> ครอบคลุม พ.ร.บ. กักพืช, ศุลกากร e-Export, GACC Decree 248/249 และมาตรฐาน Incoterms 2020
+            </div>
+
+          </div>
+
+          <div style={{ padding: '14px 16px', borderTop: '1px solid #f1f5f9', textAlign: 'center' }}>
+            <Link
+              href="/auto-fill"
+              style={{
+                display: 'block',
+                padding: '9px 14px',
+                backgroundColor: '#1b4332',
+                color: '#ffffff',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontSize: '12.5px',
+                fontWeight: '700'
+              }}
+            >
+              📝 ไปหน้า Auto-Fill สร้างเอกสาร ➔
+            </Link>
+          </div>
+
+        </div>
+
+        {/* ฝั่งขวา: ห้องแชตบอต (Chat Area) */}
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+          
+          {/* Top Bar ในแชต */}
+          <div style={{ padding: '14px 22px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#22c55e' }}></div>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: '800', color: '#1b4332' }}>ผู้ช่วยตรวจเช็กข้อกำหนดกฎหมาย (Active)</div>
+                <div style={{ fontSize: '11.5px', color: '#64748b' }}>ให้คำตอบจากฐานข้อมูลกฎหมายการค้าเกษตรระหว่างประเทศ</div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setMessages([{
+                role: 'assistant',
+                text: 'การสนทนาถูกรีเซ็ตเรียบร้อยแล้วครับ สอบถามข้อกำหนดหรือกฎหมายส่งออกหัวข้อใหม่ได้เลยครับ 🌾',
+                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+              }])}
+              style={{
+                padding: '5px 10px',
+                backgroundColor: '#f1f5f9',
+                border: '1px solid #cbd5e1',
+                borderRadius: '6px',
+                fontSize: '11.5px',
+                fontWeight: '700',
+                color: '#475569',
+                cursor: 'pointer'
+              }}
+            >
+              🔄 ล้างประวัติแชต
+            </button>
+          </div>
+
+          {/* กระดานข้อความสนทนา */}
+          <div style={{ flex: 1, padding: '22px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '18px', backgroundColor: '#fcfdfd' }}>
+            {messages.map((m, idx) => {
+              const isUser = m.role === 'user';
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: isUser ? 'flex-end' : 'flex-start',
+                    gap: '4px'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', maxWidth: '82%', flexDirection: isUser ? 'row-reverse' : 'row' }}>
+                    
+                    {/* Avatar */}
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      backgroundColor: isUser ? '#1b4332' : '#e9c46a',
+                      color: isUser ? '#ffffff' : '#1b4332',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      flexShrink: 0,
+                      fontWeight: '800'
+                    }}>
+                      {isUser ? '👤' : '⚖️'}
+                    </div>
+
+                    {/* Bubble */}
+                    <div
+                      style={{
+                        padding: '14px 18px',
+                        borderRadius: isUser ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
+                        backgroundColor: isUser ? '#1b4332' : '#ffffff',
+                        color: isUser ? '#ffffff' : '#1e293b',
+                        border: isUser ? 'none' : '1px solid #e2e8f0',
+                        fontSize: '13.5px',
+                        lineHeight: '1.65',
+                        whiteSpace: 'pre-wrap',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
+                        position: 'relative'
+                      }}
+                    >
+                      {m.text}
+
+                      {!isUser && (
+                        <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end' }}>
+                          <button
+                            onClick={() => copyToClipboard(m.text, idx)}
+                            style={{
+                              backgroundColor: 'transparent',
+                              border: 'none',
+                              color: '#64748b',
+                              fontSize: '11px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            {copyStatus === idx ? '✓ คัดลอกแล้ว' : '📋 คัดลอกข้อความ'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+
+                  {/* เวลาที่ส่ง */}
+                  <span style={{ fontSize: '11px', color: '#94a3b8', margin: '0 40px' }}>
+                    {m.time || ''}
+                  </span>
+                </div>
+              );
+            })}
+
+            {loading && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#e9c46a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
+                  ⚖️
+                </div>
+                <div style={{ padding: '10px 16px', borderRadius: '4px 16px 16px 16px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', fontSize: '12.5px', color: '#64748b' }}>
+                  ⏳ กำลังสืบค้นข้อกำหนดกฎหมายจาก info.json...
+                </div>
+              </div>
+            )}
+
+            <div ref={chatEndRef} />
+          </div>
+
+          {/* กล่องพิมพ์คำถามด้านล่าง */}
+          <div style={{ padding: '16px 20px', borderTop: '1px solid #e2e8f0', backgroundColor: '#ffffff' }}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSend();
+              }}
+              style={{ display: 'flex', gap: '10px', alignItems: 'center' }}
+            >
+              <input
+                type="text"
+                placeholder="พิมพ์ข้อสงสัยเกี่ยวกับกฎหมายส่งออก สัญญา หรือข้อกำหนดศุลกากร..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: '10px',
+                  border: '1.5px solid #cbd5e1',
+                  fontSize: '13.5px',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+              />
+              <button
+                type="submit"
+                disabled={loading || !inputMessage.trim()}
+                style={{
+                  padding: '12px 22px',
+                  backgroundColor: '#1b4332',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontWeight: '700',
+                  fontSize: '13.5px',
+                  cursor: loading || !inputMessage.trim() ? 'not-allowed' : 'pointer',
+                  opacity: loading || !inputMessage.trim() ? 0.6 : 1,
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                ส่งข้อความ ➔
+              </button>
+            </form>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  );
+}
