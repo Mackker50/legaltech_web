@@ -1,25 +1,49 @@
 import { NextResponse } from 'next/server';
-import { readData, writeData } from '@/lib/flatfile';
 import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
+import { getUsers, saveUser } from '@/lib/jsonAuth';
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { firstName, lastName, email, password, phone, taxId, role } = body;
+    const { 
+      fullName, 
+      birthDate, 
+      address, 
+      taxId, 
+      phone, 
+      email, 
+      password, 
+      confirmPassword,
+      role 
+    } = body;
 
-    if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !password) {
+    // ตรวจสอบการกรอกข้อมูลที่จำเป็น
+    if (!fullName || !birthDate || !address || !taxId || !phone || !email || !password) {
       return NextResponse.json(
-        { success: false, message: 'กรุณากรอกข้อมูลบังคับให้ครบถ้วน' },
+        { success: false, message: 'กรุณากรอกข้อมูลให้ครบทุกช่อง' },
         { status: 400 }
       );
     }
 
-    const cleanEmail = email.trim().toLowerCase();
-    const users = await readData('users.json');
+    if (password !== confirmPassword) {
+      return NextResponse.json(
+        { success: false, message: 'รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน' },
+        { status: 400 }
+      );
+    }
 
-    // ตรวจสอบอีเมลซ้ำ
-    const existingUser = users.find((u) => u.email === cleanEmail);
+    if (password.length < 6) {
+      return NextResponse.json(
+        { success: false, message: 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร' },
+        { status: 400 }
+      );
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const users = getUsers();
+
+    // ตรวจสอบอีเมลซ้ำในไฟล์ JSON
+    const existingUser = users.find(u => u.email === cleanEmail);
     if (existingUser) {
       return NextResponse.json(
         { success: false, message: 'อีเมลนี้ถูกใช้งานในระบบแล้ว' },
@@ -27,30 +51,47 @@ export async function POST(request) {
       );
     }
 
+    // แฮชรหัสผ่าน
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // โครงสร้าง User Object สมบูรณ์
     const newUser = {
-      id: uuidv4(),
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
+      id: 'USER-' + Date.now(),
+      fullName: fullName.trim(),
+      name: fullName.trim(), // สำหรับแสดงผลบน Navbar
+      birthDate,
+      address: address.trim(),
+      taxId: taxId.trim(),
+      phone: phone.trim(),
       email: cleanEmail,
       password: hashedPassword,
-      phone: phone?.trim() || null,
-      taxId: taxId?.trim() || null,
       role: role || 'EXPORTER',
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
     };
 
-    users.push(newUser);
-    await writeData('users.json', users);
+    // เขียนข้อมูลลงไฟล์ data/users.json
+    const isSaved = saveUser(newUser);
 
+    if (!isSaved) {
+      return NextResponse.json(
+        { success: false, message: 'ไม่สามารถบันทึกข้อมูลลงไฟล์ JSON ได้' },
+        { status: 500 }
+      );
+    }
+
+    // ตัดรหัสผ่านก่อนส่งข้อมูลกลับ Client
     const { password: _, ...userWithoutPassword } = newUser;
-    return NextResponse.json(
-      { success: true, message: 'ลงทะเบียนสำเร็จ', user: userWithoutPassword },
-      { status: 201 }
-    );
+
+    return NextResponse.json({
+      success: true,
+      message: 'สร้างบัญชีผู้ใช้สำเร็จ',
+      user: userWithoutPassword
+    });
+
   } catch (error) {
+    console.error('Register API Error:', error);
     return NextResponse.json(
-      { success: false, error: 'เกิดข้อผิดพลาด: ' + error.message },
+      { success: false, message: 'เกิดข้อผิดพลาดในการลงทะเบียน' },
       { status: 500 }
     );
   }

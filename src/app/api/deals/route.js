@@ -1,32 +1,39 @@
 import { NextResponse } from 'next/server';
-import { readData, writeData } from '@/lib/flatfile';
-import { v4 as uuidv4 } from 'uuid';
+import { getDeals, saveOrUpdateDeal } from '@/lib/jsonDeals';
 
 export async function GET() {
-  const deals = await readData('deals.json');
-  return NextResponse.json({ success: true, deals }, { status: 200 });
+  try {
+    const deals = getDeals();
+    return NextResponse.json({ success: true, deals });
+  } catch (error) {
+    return NextResponse.json({ success: false, message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' }, { status: 500 });
+  }
 }
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const deals = await readData('deals.json');
-
-    const newDeal = {
-      id: uuidv4(),
-      ...body,
-      status: 'DRAFT',
-      createdAt: new Date().toISOString(),
+    const dealData = {
+      dealId: body.dealId || 'EXP-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 900) + 100),
+      productName: body.productName,
+      destination: body.destination,
+      buyer: body.buyer || '-',
+      quantity: body.quantity || '-',
+      incoterm: body.incoterm || 'FOB',
+      incotermCode: body.incotermCode || 'FOB',
+      deliveryTarget: body.deliveryTarget || '-',
+      price: body.price || '0 บาท',
+      companyName: body.companyName,
+      currentStep: body.currentStep || 1,
+      documents: body.documents || [],
+      auditTimeline: body.auditTimeline || [],
+      shippingTimeline: body.shippingTimeline || []
     };
 
-    deals.push(newDeal);
-    await writeData('deals.json', deals);
-
-    return NextResponse.json({ success: true, deal: newDeal }, { status: 201 });
+    saveOrUpdateDeal(dealData);
+    const updatedDeals = getDeals();
+    return NextResponse.json({ success: true, deal: dealData, deals: updatedDeals });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'เกิดข้อผิดพลาดทางเซิร์ฟเวอร์' }, { status: 500 });
   }
 }

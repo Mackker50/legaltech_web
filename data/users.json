@@ -1,0 +1,13 @@
+[
+  {
+    "id": "8ff6e042-314c-4070-a844-87787287ba5d",
+    "firstName": "admin",
+    "lastName": "good",
+    "email": "admin@gmail.com",
+    "password": "$2a$10$oZPgsUqM1wTdCIts0qLbY.T8aLTfto/dV98/U479zMOIU12EE5d6W",
+    "phone": "0999999999",
+    "taxId": "1111111111111",
+    "role": "EXPORTER",
+    "createdAt": "2026-11-10T10:40:35.983Z"
+  }
+]

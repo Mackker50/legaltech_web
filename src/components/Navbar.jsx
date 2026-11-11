@@ -71,14 +71,18 @@ export default function Navbar() {
           <div>
             {currentUser ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '6px', backgroundColor: '#f4f9f5', border: '1px solid #d8f3dc' }}>
-                  <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#1b4332', color: '#e9c46a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>
-                    {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '👤'}
+                {/* ปุ่มโปรไฟล์ผู้ใช้ คลิกเพื่อเข้า /profile */}
+                <Link href="/profile" style={{ textDecoration: 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '6px', backgroundColor: '#f4f9f5', border: '1px solid #d8f3dc', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#1b4332', color: '#e9c46a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>
+                      {currentUser.fullName ? currentUser.fullName.charAt(0).toUpperCase() : (currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '👤')}
+                    </div>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#1b4332' }}>
+                      {currentUser.fullName || currentUser.name || 'โปรไฟล์'}
+                    </span>
                   </div>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#1b4332' }}>
-                    {currentUser.name || 'ผู้ใช้งาน'}
-                  </span>
-                </div>
+                </Link>
+
                 <button
                   onClick={() => {
                     localStorage.removeItem('user_session');
