@@ -7,61 +7,121 @@ import { useAppContext } from '@/context/AppContext';
 
 export default function HomePage() {
   const context = useAppContext() || {};
-  const { theme, lang, user } = context;
-
-  const currentTheme = theme || {
-    cardBg: '#ffffff',
-    textMain: '#1d1d1f',
-    textSub: '#86868b',
-    border: '#e5e5ea',
-    link: '#0071e3',
-    shadow: '0 8px 30px rgba(0,0,0,0.04)'
-  };
+  const { lang, user } = context;
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '60px 24px' }}>
+    <div style={{ backgroundColor: '#f8f9fa', minHeight: '90vh', paddingBottom: '60px', fontFamily: "'Prompt', 'Sarabun', sans-serif" }}>
       
-      {/* Hero Header */}
-      <div style={{ textAlign: 'center', maxWidth: '760px', margin: '0 auto 64px auto' }}>
-        <div style={{ display: 'inline-block', padding: '6px 16px', borderRadius: '980px', backgroundColor: 'rgba(0,113,227,0.08)', color: currentTheme.link, fontSize: '13px', fontWeight: '600', marginBottom: '20px' }}>
-          🌾 Next-Gen Agricultural Export Platform
-        </div>
-        <h1 style={{ fontSize: '48px', fontWeight: '800', lineHeight: '1.15', color: currentTheme.textMain, marginBottom: '20px', letterSpacing: '-1.5px' }}>
-          {lang === 'en' ? 'Seamless Agri-Export Legal Compliance' : 'ยกระดับการส่งออกสินค้าเกษตร ด้วยระบบบริหารสัญญาและเอกสารดิจิทัล'}
-        </h1>
-        <p style={{ fontSize: '18px', color: currentTheme.textSub, lineHeight: '1.5', marginBottom: '32px' }}>
-          {lang === 'en' 
-            ? 'Automate compliance documents, phytosanitary certifications, HS classification, and supply chain tracking in one Apple-inspired workspace.' 
-            : 'จัดการสัญญาซื้อขาย ขอใบรับรองสุขอนามัยพืช เช็ก HS Code และติดตามสถานะการขนส่งจบในที่เดียว'}
-        </p>
-        
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-          <Link href={user ? "/workspace" : "/login"} style={{ padding: '14px 32px', borderRadius: '980px', backgroundColor: currentTheme.link, color: '#fff', textDecoration: 'none', fontWeight: '600', fontSize: '16px', boxShadow: '0 4px 16px rgba(0,113,227,0.3)' }}>
-            {user ? (lang === 'en' ? 'Go to Workspace' : 'เข้าสู่ศูนย์ปฏิบัติการ') : (lang === 'en' ? 'Get Started' : 'เริ่มต้นใช้งานฟรี')}
-          </Link>
-          <Link href="/documents" style={{ padding: '14px 32px', borderRadius: '980px', backgroundColor: currentTheme.cardBg, color: currentTheme.textMain, border: `1px solid ${currentTheme.border}`, textDecoration: 'none', fontWeight: '600', fontSize: '16px' }}>
-            {lang === 'en' ? 'Browse Documents' : 'ดูคลังเอกสาร'}
-          </Link>
+      {/* Breadcrumb Section */}
+      <div style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e9ecef', padding: '12px 0' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', fontSize: '13px', color: '#6c757d' }}>
+          <span>หน้าหลัก</span> &gt; <span style={{ color: '#1b4332', fontWeight: '600' }}>ศูนย์บริการข้อมูลกฎหมายและการส่งออกสินค้าเกษตร</span>
         </div>
       </div>
 
-      {/* Feature Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
-        {[
-          { icon: '📁', title: 'คลังเอกสารอัตโนมัติ', desc: 'ดึงข้อมูลจากสัญญาเติมลงแบบฟอร์มศุลกากรแม่นยำ', href: '/documents' },
-          { icon: '📜', title: 'ยื่นใบรับรองสุขอนามัยพืช', desc: 'เชื่อมต่อข้อมูลกรมวิชาการเกษตรและกรมการค้าต่างประเทศ', href: '/certificates' },
-          { icon: '🔍', title: 'จำแนก HS Code สินค้า', desc: 'ค้นหาอัตราภาษีและมาตรการนำเข้าปลายทางได้ทันที', href: '/hs-classifier' },
-          { icon: '🚢', title: 'ติดตาม Supply Chain', desc: 'เช็กสถานะสินค้าเรียลไทม์ตั้งแต่แปลงเกษตรถึงท่าเรือ', href: '/supply-chain' }
-        ].map((f, i) => (
-          <Link key={i} href={f.href} style={{ textDecoration: 'none' }}>
-            <div style={{ backgroundColor: currentTheme.cardBg, padding: '32px 24px', borderRadius: '24px', border: `1px solid ${currentTheme.border}`, boxShadow: currentTheme.shadow, transition: 'transform 0.2s ease', height: '100%', boxSizing: 'border-box' }}>
-              <div style={{ fontSize: '36px', marginBottom: '16px' }}>{f.icon}</div>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: currentTheme.textMain, margin: '0 0 8px 0' }}>{f.title}</h3>
-              <p style={{ fontSize: '14px', color: currentTheme.textSub, margin: 0, lineHeight: '1.4' }}>{f.desc}</p>
+      {/* Main Container */}
+      <div style={{ maxWidth: '1200px', margin: '30px auto 0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '30px' }}>
+        
+        {/* Main Content Area */}
+        <div>
+          {/* Banner Hero Card: พื้นหลังขาว กรอบเขียวขอบเหลือง */}
+          <div style={{ backgroundColor: '#ffffff', padding: '36px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', marginBottom: '28px', borderLeft: '6px solid #1b4332', borderTop: '1px solid #e9ecef', borderRight: '1px solid #e9ecef', borderBottom: '1px solid #e9ecef' }}>
+            <div style={{ display: 'inline-block', backgroundColor: '#fefae0', color: '#bc6c25', padding: '4px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: '700', marginBottom: '12px', border: '1px solid #dda15e' }}>
+              AGRI-EXPORT LEGAL & COMPLIANCE PORTAL
             </div>
-          </Link>
-        ))}
+            <h1 style={{ fontSize: '30px', color: '#1b4332', fontWeight: '800', lineHeight: '1.3', marginBottom: '16px' }}>
+              {lang === 'en' ? 'Agri-Export Compliance & Legal Portal' : 'ยกระดับการส่งออกสินค้าเกษตรไทย ด้วยระบบบริการเอกสารและกฎหมายดิจิทัล'}
+            </h1>
+            <p style={{ color: '#495057', fontSize: '15px', lineHeight: '1.6', marginBottom: '28px' }}>
+              ศูนย์รวมบริการจัดการสัญญาซื้อขายระหว่างประเทศ ตรวจสอบพิกัดอัตราศุลกากร ยื่นขอใบรับรองสุขอนามัยพืช (DOA) และติดตามสถานะสินค้าเกษตรตั้งแต่แปลงปลูกจนถึงท่าเรือปลายทาง
+            </p>
+
+            <div style={{ display: 'flex', gap: '14px' }}>
+              <Link href={user ? "/workspace" : "/login"} style={{ padding: '12px 30px', backgroundColor: '#1b4332', color: '#ffffff', textDecoration: 'none', fontWeight: '600', borderRadius: '8px', fontSize: '14px', boxShadow: '0 4px 12px rgba(27,67,50,0.25)' }}>
+                {user ? 'เข้าสู่ศูนย์ปฏิบัติการ (Workspace)' : 'เข้าสู่ระบบผู้ส่งออก'}
+              </Link>
+              <Link href="/documents" style={{ padding: '12px 30px', backgroundColor: '#ffffff', color: '#1b4332', textDecoration: 'none', fontWeight: '600', borderRadius: '8px', border: '1.5px solid #1b4332', fontSize: '14px' }}>
+                ดูคลังเอกสารตัวอย่าง
+              </Link>
+            </div>
+          </div>
+
+          {/* Services Grid Header */}
+          <h2 style={{ fontSize: '20px', color: '#1b4332', fontWeight: '700', marginBottom: '18px', borderBottom: '2.5px solid #e9c46a', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>🌿</span> บริการดิจิทัลสำหรับผู้ส่งออกสินค้าเกษตร
+          </h2>
+
+          {/* Services Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
+            {[
+              { title: 'คลังเอกสาร & Auto-Fill', desc: 'ดึงข้อมูลสัญญาและเติมลงแบบฟอร์มศุลกากรอัตโนมัติ', href: '/documents', icon: '📁' },
+              { title: 'ยื่นคำขอใบรับรองพืช (DOA)', desc: 'ยื่นขอ Phytosanitary Certificate และ Form E', href: '/certificates', icon: '📜' },
+              { title: 'จำแนก HS Code & ภาษี', desc: 'ตรวจสอบสิทธิประโยชน์ FTA และมาตรการภาษีปลายทาง', href: '/hs-classifier', icon: '🔍' },
+              { title: 'ติดตาม Supply Chain', desc: 'ตรวจสอบสถานะตู้สินค้าตั้งแต่สวนถึงท่าเรือปลายทาง', href: '/supply-chain', icon: '🚢' },
+            ].map((item, idx) => (
+              <Link key={idx} href={item.href} style={{ textDecoration: 'none' }}>
+                <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '10px', border: '1px solid #e9ecef', height: '100%', boxSizing: 'border-box', transition: 'all 0.2s ease-in-out', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '12px' }}>{item.icon}</div>
+                  <h3 style={{ fontSize: '17px', color: '#1b4332', fontWeight: '700', margin: '0 0 6px 0' }}>{item.title}</h3>
+                  <p style={{ fontSize: '13.5px', color: '#6c757d', margin: 0, lineHeight: '1.5' }}>{item.desc}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <div>
+          {/* Announcement Card */}
+          <div style={{ backgroundColor: '#ffffff', padding: '20px', borderRadius: '10px', border: '1px solid #e9ecef', marginBottom: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+            <h3 style={{ fontSize: '16px', color: '#1b4332', fontWeight: '700', margin: '0 0 14px 0', borderBottom: '2px solid #e9c46a', paddingBottom: '6px' }}>
+              📢 ประกาศและมาตรการล่าสุด
+            </h3>
+            <ul style={{ paddingLeft: '18px', margin: 0, fontSize: '13px', color: '#495057', lineHeight: '1.8' }}>
+              <li>ข้อกำหนดการส่งออกทุเรียนสดไปตลาดจีน (ปี 2026)</li>
+              <li>การขอหนังสือรับรองถิ่นกำเนิดสินค้า Form E ดิจิทัล</li>
+              <li>การตรวจมาตรฐานสารตกค้างในพืชผักส่งออก EU</li>
+            </ul>
+          </div>
+
+          {/* Contact Box: สีเขียวเข้ม ตัวอักษรเหลืองทอง */}
+          <div style={{ backgroundColor: '#1b4332', color: '#ffffff', padding: '22px', borderRadius: '10px', borderTop: '4px solid #e9c46a' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 10px 0', color: '#e9c46a' }}>
+              📞 ติดต่อสอบถามข้อกฎหมาย
+            </h3>
+            <p style={{ fontSize: '13px', lineHeight: '1.5', margin: '0 0 14px 0', color: '#d8f3dc' }}>
+              หากต้องการปรึกษาข้อกำหนดสัญญาหรือมาตรการการส่งออกพืชผล สามารถประสานงานทีมงานได้โดยตรง
+            </p>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#e9c46a' }}>HOTLINE: 02-XXX-XXXX</div>
+          </div>
+        </div>
+
       </div>
+
+      {/* Footer Section */}
+      <footer style={{ backgroundColor: '#081c15', color: '#95d5b2', marginTop: '60px', padding: '40px 0 20px 0', borderTop: '4px solid #e9c46a', fontSize: '13px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '30px', marginBottom: '30px' }}>
+          <div>
+            <h4 style={{ color: '#ffffff', fontSize: '16px', marginBottom: '12px' }}>AgriLegal Pro Portal</h4>
+            <p style={{ lineHeight: '1.6', color: '#b7e4c7' }}>ระบบบริหารจัดการข้อกำหนด กฎหมาย และสัญญาการส่งออกสินค้าเกษตรไทย เพื่อยกระดับความเชื่อมั่นในระบบการค้าโลก</p>
+          </div>
+          <div>
+            <h4 style={{ color: '#ffffff', fontSize: '15px', marginBottom: '12px' }}>บริการหลัก</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <Link href="/documents" style={{ color: '#95d5b2', textDecoration: 'none' }}>คลังเอกสาร</Link>
+              <Link href="/certificates" style={{ color: '#95d5b2', textDecoration: 'none' }}>ยื่นขอใบรับรอง</Link>
+              <Link href="/hs-classifier" style={{ color: '#95d5b2', textDecoration: 'none' }}>ตรวจสอบ HS Code</Link>
+            </div>
+          </div>
+          <div>
+            <h4 style={{ color: '#ffffff', fontSize: '15px', marginBottom: '12px' }}>สถานะระบบ</h4>
+            <p style={{ lineHeight: '1.6', color: '#b7e4c7' }}>พร้อมใช้งานในรูปแบบ Multi-Role Platform และ Build Stability 100% บน Vercel</p>
+          </div>
+        </div>
+        <div style={{ textAlign: 'center', borderTop: '1px solid #1b4332', paddingTop: '20px', color: '#52b788' }}>
+          © 2026 AgriLegal Pro. All Rights Reserved.
+        </div>
+      </footer>
     </div>
   );
 }
